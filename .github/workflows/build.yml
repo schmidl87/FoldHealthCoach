@@ -27,7 +27,7 @@ jobs:
         with:
           gradle-version: '8.11.1'
 
-      - name: Projektstruktur & Icon erzeugen
+      - name: Compose-Projekt & Icon erzeugen
         run: |
           mkdir -p app/src/main/java/de/fold8/healthcoach
           mkdir -p app/src/main/res/drawable
@@ -68,19 +68,21 @@ jobs:
           plugins {
               id("com.android.application") version "8.9.1" apply false
               id("org.jetbrains.kotlin.android") version "2.0.21" apply false
+              id("org.jetbrains.kotlin.plugin.compose") version "2.0.21" apply false
           }
           EOF
 
           cat << 'EOF' > gradle.properties
           android.useAndroidX=true
           kotlin.code.style=official
-          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+          org.gradle.jvmargs=-Xmx2560m -Dfile.encoding=UTF-8
           EOF
 
           cat << 'EOF' > app/build.gradle.kts
           plugins {
               id("com.android.application")
               id("org.jetbrains.kotlin.android")
+              id("org.jetbrains.kotlin.plugin.compose")
           }
 
           android {
@@ -91,8 +93,12 @@ jobs:
                   applicationId = "de.fold8.healthcoach"
                   minSdk = 28
                   targetSdk = 35
-                  versionCode = 5
-                  versionName = "3.0"
+                  versionCode = 6
+                  versionName = "4.0"
+              }
+
+              buildFeatures {
+                  compose = true
               }
 
               signingConfigs {
@@ -126,26 +132,19 @@ jobs:
 
           dependencies {
               implementation("androidx.core:core-ktx:1.15.0")
-              implementation("androidx.appcompat:appcompat:1.7.0")
-              implementation("com.google.android.material:material:1.12.0")
               implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+              implementation("androidx.activity:activity-compose:1.9.3")
+              implementation(platform("androidx.compose:compose-bom:2024.12.01"))
+              implementation("androidx.compose.ui:ui")
+              implementation("androidx.compose.ui:ui-graphics")
+              implementation("androidx.compose.foundation:foundation")
+              implementation("androidx.compose.material3:material3")
               implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
               implementation("androidx.health.connect:connect-client:1.1.0")
           }
           EOF
 
-                    cat << 'EOF' > app/src/main/res/drawable/ic_launcher_background.xml
-          <?xml version="1.0" encoding="utf-8"?>
-          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-              <gradient
-                  android:type="radial"
-                  android:gradientRadius="75%"
-                  android:startColor="#162231"
-                  android:endColor="#090C10" />
-          </shape>
-          EOF
-
-          cat << 'EOF' > app/src/main/res/drawable/ic_launcher_foreground.xml
+                    cat << 'EOF' > app/src/main/res/drawable/ic_launcher_foreground.xml
           <?xml version="1.0" encoding="utf-8"?>
           <vector xmlns:android="http://schemas.android.com/apk/res/android"
               android:width="108dp"
@@ -153,30 +152,31 @@ jobs:
               android:viewportWidth="108"
               android:viewportHeight="108">
               <path
-                  android:strokeColor="#1F2D3D"
-                  android:strokeWidth="6"
-                  android:fillColor="@android:color/transparent"
-                  android:pathData="M54,24 A30,30 0 1,1 53.9,24" />
-              <path
-                  android:strokeColor="#16E06B"
-                  android:strokeWidth="6"
+                  android:strokeColor="#00E676"
+                  android:strokeWidth="6.5"
                   android:strokeLineCap="round"
                   android:fillColor="@android:color/transparent"
-                  android:pathData="M54,24 A30,30 0 1,1 26,65" />
+                  android:pathData="M54,23 A31,31 0 1,1 24,62" />
               <path
-                  android:strokeColor="#2997FF"
-                  android:strokeWidth="4.2"
+                  android:strokeColor="#00B0FF"
+                  android:strokeWidth="6.5"
+                  android:strokeLineCap="round"
+                  android:fillColor="@android:color/transparent"
+                  android:pathData="M24,46 A31,31 0 0,1 46,24" />
+              <path
+                  android:strokeColor="#FF375F"
+                  android:strokeWidth="4.5"
                   android:strokeLineCap="round"
                   android:strokeLineJoin="round"
                   android:fillColor="@android:color/transparent"
-                  android:pathData="M34,55 L44,55 L49,41 L54,69 L59,46 L63,55 L74,55" />
+                  android:pathData="M33,55 L43,55 L48,40 L54,70 L60,45 L64,55 L75,55" />
           </vector>
           EOF
 
           cat << 'EOF' > app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
           <?xml version="1.0" encoding="utf-8"?>
           <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-              <background android:drawable="@drawable/ic_launcher_background" />
+              <background android:drawable="@android:color/transparent" />
               <foreground android:drawable="@drawable/ic_launcher_foreground" />
           </adaptive-icon>
           EOF
@@ -184,7 +184,7 @@ jobs:
           cat << 'EOF' > app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
           <?xml version="1.0" encoding="utf-8"?>
           <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-              <background android:drawable="@drawable/ic_launcher_background" />
+              <background android:drawable="@android:color/transparent" />
               <foreground android:drawable="@drawable/ic_launcher_foreground" />
           </adaptive-icon>
           EOF
@@ -202,6 +202,14 @@ jobs:
               <uses-permission android:name="android.permission.health.READ_EXERCISE" />
               <uses-permission android:name="android.permission.health.READ_ACTIVE_CALORIES_BURNED" />
               <uses-permission android:name="android.permission.health.READ_VO2_MAX" />
+              <uses-permission android:name="android.permission.health.READ_SKIN_TEMPERATURE" />
+              <uses-permission android:name="android.permission.health.READ_OXYGEN_SATURATION" />
+              <uses-permission android:name="android.permission.health.READ_RESPIRATORY_RATE" />
+              <uses-permission android:name="android.permission.health.READ_WEIGHT" />
+              <uses-permission android:name="android.permission.health.READ_BODY_FAT" />
+              <uses-permission android:name="android.permission.health.READ_LEAN_BODY_MASS" />
+              <uses-permission android:name="android.permission.health.READ_BONE_MASS" />
+              <uses-permission android:name="android.permission.health.READ_BODY_WATER_MASS" />
               <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_HISTORY" />
 
               <queries>
@@ -214,7 +222,7 @@ jobs:
                   android:roundIcon="@mipmap/ic_launcher_round"
                   android:label="Fold Health Coach"
                   android:supportsRtl="true"
-                  android:theme="@style/Theme.Material3.DayNight.NoActionBar">
+                  android:theme="@android:style/Theme.Material.NoActionBar">
 
                   <activity android:name=".MainActivity" android:exported="true">
                       <intent-filter>
@@ -241,7 +249,7 @@ jobs:
           </manifest>
           EOF
 
-                    cat << 'EOF' > app/src/main/java/de/fold8/healthcoach/HealthModelsAndAnalyzer.kt
+                    cat << 'EOF' > app/src/main/java/de/fold8/healthcoach/ModelsAndFitnessEngine.kt
           package de.fold8.healthcoach
 
           import androidx.health.connect.client.records.ExerciseSessionRecord
@@ -249,11 +257,12 @@ jobs:
           import kotlin.math.roundToInt
 
           enum class DataSource(val label: String, val cardioPriority: Int) {
-              GARMIN("Garmin", 4),
-              ZWIFT("Zwift", 3),
-              SPEEDIANCE("Speediance", 2),
-              GOOGLE_SAMSUNG("Google / Samsung", 1),
-              OTHER("Andere App", 0)
+              GARMIN("Garmin", 5),
+              ZWIFT("Zwift", 4),
+              SPEEDIANCE("Speediance", 3),
+              WITHINGS("Withings", 2),
+              FITBIT("Fitbit Air", 1),
+              OTHER("Health Connect", 0)
           }
 
           enum class TimeRangeOption(val label: String, val days: Long) {
@@ -272,6 +281,27 @@ jobs:
               CORE("Core")
           }
 
+          data class BodyComposition(
+              val weightKg: Double?,
+              val bodyFatPercent: Double?,
+              val muscleMassKg: Double?,
+              val boneMassKg: Double?,
+              val waterMassKg: Double?,
+              val dateLabel: String?,
+              val weightTrend: List<Pair<String, Float>>
+          )
+
+          data class DeviceComparison(
+              val garminRhr: Int?,
+              val fitbitRhr: Int?,
+              val garminHrv: Double?,
+              val fitbitHrv: Double?,
+              val garminSleepMin: Long?,
+              val fitbitSleepMin: Long?,
+              val garminSteps: Long?,
+              val fitbitSteps: Long?
+          )
+
           data class SleepDetail(
               val totalMinutes: Long,
               val deepMinutes: Long,
@@ -279,7 +309,7 @@ jobs:
               val lightMinutes: Long,
               val awakeMinutes: Long,
               val efficiencyPercent: Int,
-              val sleepPerformancePercent: Int,
+              val performancePercent: Int,
               val sourceLabel: String,
               val dailyHours7d: List<Pair<String, Float>>
           )
@@ -293,6 +323,9 @@ jobs:
               val durationMinutes: Long,
               val avgHeartRate: Int?,
               val maxHeartRate: Int?,
+              val avgWatts: Int?,
+              val normalizedWatts: Int?,
+              val distanceKm: Double?,
               val hrCurve: List<Int>,
               val zoneMinutes: List<Int>,
               val activeKcal: Int,
@@ -303,31 +336,43 @@ jobs:
               val muscleGroups: Set<MuscleGroup>
           )
 
+          data class FitnessAgeFactor(
+              val name: String,
+              val valueDisplay: String,
+              val deltaYears: Double
+          )
+
           data class FitnessProfile(
               val chronologicalAge: Int,
               val fitnessAge: Int,
-              val ageDelta: Int,
+              val netDeltaYears: Double,
               val fitnessScore: Int,
               val fitnessLevelLabel: String,
-              val vo2Max: Double?,
-              val latestRestingHr: Int?,
-              val latestHrvMs: Double?,
-              val factorBreakdown: List<String>
+              val factors: List<FitnessAgeFactor>
           )
 
           data class HealthReport(
               val generatedDateLabel: String,
               val selectedRange: TimeRangeOption,
               val periodSteps: Long,
-              val periodRawSteps: Long,
+              val primaryStepsSource: String,
               val periodActiveKcal: Int,
               val latestRestingHr: Int?,
+              val restingHrSource: String,
               val latestHrvMs: Double?,
+              val hrvSource: String,
+              val skinTempDeltaC: Double?,
+              val spo2Percent: Double?,
+              val respRate: Double?,
+              val vo2Max: Double?,
               val rhrTrend7d: List<Pair<String, Float>>,
               val hrvTrend7d: List<Pair<String, Float>>,
+              val skinTempTrend7d: List<Pair<String, Float>>,
               val sleepDetail: SleepDetail?,
+              val bodyComp: BodyComposition,
+              val deviceComparison: DeviceComparison,
               val filteredWorkouts: List<UnifiedWorkout>,
-              val allHistoricalWorkoutsCount: Int,
+              val archiveCount: Int,
               val periodMuscleSets: Map<MuscleGroup, Int>,
               val auditLogs: List<String>,
               val recoveryPercent: Int,
@@ -335,14 +380,14 @@ jobs:
               val fitnessProfile: FitnessProfile
           )
 
-          object MuscleAndFitnessAnalyzer {
+          object FitnessAgeEngine {
 
-              fun detectMuscleGroups(base: ExerciseSessionRecord, partner: ExerciseSessionRecord?, manualNames: Set<String>): Set<MuscleGroup> {
-                  if (manualNames.isNotEmpty()) {
-                      return manualNames.mapNotNull { n -> MuscleGroup.values().firstOrNull { it.name == n } }.toSet()
+              fun detectMuscles(base: ExerciseSessionRecord?, partner: ExerciseSessionRecord?, manual: Set<String>): Set<MuscleGroup> {
+                  if (manual.isNotEmpty()) {
+                      return manual.mapNotNull { n -> MuscleGroup.values().firstOrNull { it.name == n } }.toSet()
                   }
                   val found = mutableSetOf<MuscleGroup>()
-                  val text = listOfNotNull(base.title, base.notes, partner?.title, partner?.notes).joinToString(" ").lowercase()
+                  val text = listOfNotNull(base?.title, base?.notes, partner?.title, partner?.notes).joinToString(" ").lowercase()
                   if (listOf("brust", "chest", "push", "bankdrück", "bench").any { text.contains(it) }) found.add(MuscleGroup.CHEST)
                   if (listOf("rücken", "back", "pull", "lat", "ruder", "kreuzheb", "row").any { text.contains(it) }) found.add(MuscleGroup.BACK)
                   if (listOf("schulter", "shoulder", "delts").any { text.contains(it) }) found.add(MuscleGroup.SHOULDERS)
@@ -355,91 +400,272 @@ jobs:
                   return found
               }
 
-              fun calculateFitnessProfile(
+              fun evaluate(
                   age: Int,
-                  vo2Max: Double?,
                   rhr: Int?,
                   hrvMs: Double?,
-                  avgSleepHours: Double?,
+                  vo2Max: Double?,
+                  bodyFatPct: Double?,
+                  sleepHours: Double?,
                   workouts30d: List<UnifiedWorkout>,
-                  avgDailySteps30d: Long
+                  avgSteps30d: Long
               ): FitnessProfile {
-                  val factors = mutableListOf<String>()
-                  var ageDelta = 0.0
-                  var score = 55.0
+                  val factors = mutableListOf<FitnessAgeFactor>()
 
-                  // 1. Ruhepuls-Einfluss (Norm ca. 62 bpm; höherer Puls erhöht das Fitnessalter ehrlich!)
-                  if (rhr != null && rhr in 38..120) {
-                      val rhrAdj = ((rhr - 62) * 0.28).coerceIn(-4.5, 6.5)
-                      ageDelta += rhrAdj
-                      score -= rhrAdj * 4.5
-                      val sign = if (rhrAdj > 0) "+" else ""
-                      factors.add("Ruhepuls ($rhr bpm): $sign${"%.1f".format(rhrAdj)} J.")
-                  } else {
-                      factors.add("Ruhepuls: Keine aktuellen Daten")
-                  }
+                  // 1. Kardiovaskulärer Ruhepuls (NTNU/HUNT-Modell: Referenz ~61 bpm)
+                  val rhrDelta = if (rhr != null && rhr in 38..120) {
+                      ((rhr - 61) * 0.30).coerceIn(-4.2, 7.0)
+                  } else 0.0
+                  factors.add(FitnessAgeFactor("Ruhepuls", rhr?.let { "$it bpm" } ?: "nicht erfasst", round1(rhrDelta)))
 
-                  // 2. HRV RMSSD-Einfluss (Norm für ~39 J. ca. 45 ms; niedrige HRV = mehr Stress / höheres Fitnessalter)
-                  if (hrvMs != null && hrvMs in 8.0..180.0) {
-                      val expectedHrv = (65.0 - age * 0.5).coerceIn(28.0, 62.0)
-                      val hrvAdj = ((expectedHrv - hrvMs) / 10.0 * 1.15).coerceIn(-4.5, 5.5)
-                      ageDelta += hrvAdj
-                      score -= hrvAdj * 4.5
-                      val sign = if (hrvAdj > 0) "+" else ""
-                      factors.add("HRV (${hrvMs.roundToInt()} ms vs. Norm ${expectedHrv.roundToInt()} ms): $sign${"%.1f".format(hrvAdj)} J.")
-                  } else {
-                      factors.add("HRV: Noch nicht in Health Connect erfasst")
-                  }
+                  // 2. Autonome Erholung via HRV RMSSD (Altersnorm: 66 - 0.52 * Alter)
+                  val refHrv = (66.0 - age * 0.52).coerceIn(28.0, 62.0)
+                  val hrvDelta = if (hrvMs != null && hrvMs in 8.0..180.0) {
+                      ((refHrv - hrvMs) * 0.13).coerceIn(-4.5, 6.0)
+                  } else 0.0
+                  factors.add(FitnessAgeFactor("HRV (Norm ${refHrv.roundToInt()} ms)", hrvMs?.let { "${it.roundToInt()} ms" } ?: "nicht erfasst", round1(hrvDelta)))
 
-                  // 3. VO2max (falls Garmin überträgt)
-                  if (vo2Max != null && vo2Max in 20.0..85.0) {
-                      val expectedVo2 = (56.0 - age * 0.34).coerceAtLeast(32.0)
-                      val vo2Adj = ((expectedVo2 - vo2Max) * 0.45).coerceIn(-5.0, 5.5)
-                      ageDelta += vo2Adj
-                      score -= vo2Adj * 5.0
-                      val sign = if (vo2Adj > 0) "+" else ""
-                      factors.add("VO2max (${"%.1f".format(vo2Max)}): $sign${"%.1f".format(vo2Adj)} J.")
-                  }
-
-                  // 4. Ausdauer & Kraft (30-Tage-Schnitt)
+                  // 3. Aerobe Fitness (VO2max + Ausdauervolumen)
                   val weeks = 30.0 / 7.0
-                  val weeklyCardio = workouts30d.filter { !it.isStrength }.sumOf { it.durationMinutes } / weeks
+                  val weeklyCardioMin = (workouts30d.filter { !it.isStrength }.sumOf { it.durationMinutes } / weeks).roundToInt()
+                  val cardioDelta = if (vo2Max != null && vo2Max in 20.0..85.0) {
+                      val refVo2 = (55.0 - age * 0.34).coerceAtLeast(32.0)
+                      ((refVo2 - vo2Max) * 0.45).coerceIn(-5.0, 5.5)
+                  } else {
+                      when {
+                          weeklyCardioMin >= 180 -> -2.2
+                          weeklyCardioMin >= 100 -> -1.0
+                          weeklyCardioMin >= 45 -> 0.2
+                          else -> 1.8
+                      }
+                  }
+                  val cardioLabel = vo2Max?.let { "VO2max ${"%.1f".format(it)}" } ?: "$weeklyCardioMin Min/Wo"
+                  factors.add(FitnessAgeFactor("Ausdauer & VO2max", cardioLabel, round1(cardioDelta)))
+
+                  // 4. Körperzusammensetzung (Withings Körperfett) & Krafttraining (Speediance)
                   val weeklyStrength = workouts30d.count { it.isStrength } / weeks
-                  val trainAdj = when {
-                      weeklyCardio >= 150 && weeklyStrength >= 2.0 -> -2.2
-                      weeklyCardio >= 90 || weeklyStrength >= 2.0 -> -1.0
-                      weeklyCardio < 30 && weeklyStrength < 1.0 -> 2.0
-                      else -> 0.3
+                  var bodyStrengthDelta = when {
+                      weeklyStrength >= 2.5 -> -1.4
+                      weeklyStrength >= 1.2 -> -0.6
+                      else -> 0.6
                   }
-                  ageDelta += trainAdj
-                  score -= trainAdj * 5.0
-                  val tSign = if (trainAdj > 0) "+" else ""
-                  factors.add("Training (${weeklyCardio.roundToInt()} Min. Cardio, ${"%.1f".format(weeklyStrength)}× Kraft/Wo): $tSign${"%.1f".format(trainAdj)} J.")
-
-                  // 5. Schlaf & Alltagsschritte
-                  var lifestyleAdj = 0.0
-                  if (avgSleepHours != null) {
-                      lifestyleAdj += if (avgSleepHours < 6.3) 1.0 else if (avgSleepHours >= 7.5) -0.7 else 0.0
+                  if (bodyFatPct != null && bodyFatPct in 5.0..55.0) {
+                      bodyStrengthDelta += ((bodyFatPct - 18.0) * 0.22).coerceIn(-1.8, 3.5)
                   }
-                  lifestyleAdj += if (avgDailySteps30d < 5000L) 1.0 else if (avgDailySteps30d >= 8500L) -0.8 else 0.0
-                  ageDelta += lifestyleAdj
-                  score -= lifestyleAdj * 4.0
-                  val lSign = if (lifestyleAdj > 0) "+" else ""
-                  factors.add("Schlaf & Schritte (Ø $avgDailySteps30d/Tag): $lSign${"%.1f".format(lifestyleAdj)} J.")
+                  val bsLabel = buildString {
+                      append("${"%.1f".format(weeklyStrength)}× Kraft/Wo")
+                      if (bodyFatPct != null) append(" • ${"%.1f".format(bodyFatPct)}% Fett")
+                  }
+                  factors.add(FitnessAgeFactor("Kraft & Körperbau", bsLabel, round1(bodyStrengthDelta)))
 
-                  val finalAdj = ageDelta.roundToInt().coerceIn(-10, 14)
-                  val fitnessAge = (age + finalAdj).coerceAtLeast(18)
-                  val finalScore = score.roundToInt().coerceIn(15, 99)
+                  // 5. Schlaf & Basis-Bewegung
+                  var habitDelta = when {
+                      avgSteps30d >= 9000L -> -0.9
+                      avgSteps30d >= 6500L -> -0.2
+                      else -> 1.1
+                  }
+                  if (sleepHours != null) {
+                      habitDelta += when {
+                          sleepHours >= 7.4 -> -0.7
+                          sleepHours >= 6.4 -> 0.0
+                          else -> 1.1
+                      }
+                  }
+                  factors.add(FitnessAgeFactor("Schlaf & Schritte", "Ø $avgSteps30d/Tag", round1(habitDelta)))
+
+                  val netDelta = round1(factors.sumOf { it.deltaYears }.coerceIn(-11.0, 15.0))
+                  val fitnessAge = (age + netDelta.roundToInt()).coerceAtLeast(18)
+                  val score = (62.0 - netDelta * 4.2).roundToInt().coerceIn(15, 99)
 
                   val level = when {
-                      finalScore >= 88 -> "Elite"
-                      finalScore >= 74 -> "Athlet"
-                      finalScore >= 58 -> "Fortgeschritten"
-                      finalScore >= 42 -> "Aktiv"
+                      score >= 88 -> "Elite"
+                      score >= 74 -> "Athlet"
+                      score >= 58 -> "Fortgeschritten"
+                      score >= 42 -> "Aktiv"
                       else -> "Aufbauphase"
                   }
 
-                  return FitnessProfile(age, fitnessAge, finalAdj, finalScore, level, vo2Max, rhr, hrvMs, factors)
+                  return FitnessProfile(age, fitnessAge, netDelta, score, level, factors)
+              }
+
+              private fun round1(v: Double): Double = (v * 10.0).roundToInt() / 10.0
+          }
+          EOF
+
+                    cat << 'EOF' > app/src/main/java/de/fold8/healthcoach/IntervalsClient.kt
+          package de.fold8.healthcoach
+
+          import android.util.Base64
+          import kotlinx.coroutines.Dispatchers
+          import kotlinx.coroutines.withContext
+          import org.json.JSONArray
+          import java.net.HttpURLConnection
+          import java.net.URL
+          import java.time.Instant
+          import java.time.LocalDate
+          import java.time.LocalDateTime
+          import java.time.ZoneId
+          import java.time.format.DateTimeFormatter
+          import kotlin.math.ln
+          import kotlin.math.roundToInt
+
+          data class IntervalsWellnessDay(
+              val dateIso: String,
+              val restingHr: Int?,
+              val hrvRmssd: Double?,
+              val sleepMinutes: Long?,
+              val steps: Long?,
+              val vo2Max: Double?,
+              val weightKg: Double?,
+              val spo2: Double?,
+              val respiration: Double?
+          )
+
+          data class IntervalsSyncResult(
+              val wellnessDays: List<IntervalsWellnessDay>,
+              val workouts: List<UnifiedWorkout>,
+              val statusNote: String
+          )
+
+          class IntervalsClient {
+
+              suspend fun fetchGarminAndZwift(apiKey: String, daysBack: Long, userAge: Int): IntervalsSyncResult =
+                  withContext(Dispatchers.IO) {
+                      val cleanKey = apiKey.trim()
+                      if (cleanKey.isBlank()) {
+                          return@withContext IntervalsSyncResult(emptyList(), emptyList(), "Intervals.icu nicht verknüpft")
+                      }
+
+                      val newest = LocalDate.now().toString()
+                      val oldest = LocalDate.now().minusDays(daysBack).toString()
+                      val authHeader = "Basic " + Base64.encodeToString("API_KEY:$cleanKey".toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
+
+                      try {
+                          val wellnessJson = httpGet("https://intervals.icu/api/v1/athlete/0/wellness?oldest=$oldest&newest=$newest", authHeader)
+                          val activitiesJson = httpGet("https://intervals.icu/api/v1/athlete/0/activities?oldest=$oldest&newest=$newest", authHeader)
+
+                          val wellnessList = parseWellness(wellnessJson)
+                          val workoutList = parseActivities(activitiesJson, userAge)
+
+                          IntervalsSyncResult(
+                              wellnessList,
+                              workoutList,
+                              "Intervals.icu aktiv: ${wellnessList.size} Wellness-Tage, ${workoutList.size} Garmin/Zwift-Trainings"
+                          )
+                      } catch (e: Exception) {
+                          IntervalsSyncResult(emptyList(), emptyList(), "Intervals.icu Fehler: ${e.message}")
+                      }
+                  }
+
+              private fun httpGet(urlStr: String, authHeader: String): String {
+                  val conn = (URL(urlStr).openConnection() as HttpURLConnection).apply {
+                      requestMethod = "GET"
+                      setRequestProperty("Authorization", authHeader)
+                      setRequestProperty("Accept", "application/json")
+                      connectTimeout = 15000
+                      readTimeout = 20000
+                  }
+                  val code = conn.responseCode
+                  if (code !in 200..299) {
+                      throw RuntimeException("HTTP $code (API-Key prüfen)")
+                  }
+                  return conn.inputStream.bufferedReader().use { it.readText() }
+              }
+
+              private fun parseWellness(raw: String): List<IntervalsWellnessDay> {
+                  val arr = JSONArray(raw)
+                  val out = mutableListOf<IntervalsWellnessDay>()
+                  for (i in 0 until arr.length()) {
+                      val o = arr.getJSONObject(i)
+                      val id = o.optString("id", "")
+                      if (id.isBlank()) continue
+                      val rhr = if (!o.isNull("restingHR")) o.optInt("restingHR").takeIf { it in 35..125 } else null
+                      val hrv = when {
+                          !o.isNull("hrv") -> o.optDouble("hrv").takeIf { it in 8.0..180.0 }
+                          !o.isNull("hrvSDNN") -> o.optDouble("hrvSDNN").takeIf { it in 8.0..220.0 }
+                          else -> null
+                      }
+                      val sleepMin = if (!o.isNull("sleepSecs")) (o.optLong("sleepSecs") / 60L).takeIf { it > 30L } else null
+                      val steps = if (!o.isNull("steps")) o.optLong("steps").takeIf { it > 0L } else null
+                      val vo2 = if (!o.isNull("vo2max")) o.optDouble("vo2max").takeIf { it in 20.0..85.0 } else null
+                      val weight = if (!o.isNull("weight")) o.optDouble("weight").takeIf { it in 35.0..220.0 } else null
+                      val spo2 = if (!o.isNull("spO2")) o.optDouble("spO2").takeIf { it in 80.0..100.0 } else null
+                      val resp = if (!o.isNull("respiration")) o.optDouble("respiration").takeIf { it in 6.0..40.0 } else null
+
+                      out.add(IntervalsWellnessDay(id, rhr, hrv, sleepMin, steps, vo2, weight, spo2, resp))
+                  }
+                  return out
+              }
+
+              private fun parseActivities(raw: String, userAge: Int): List<UnifiedWorkout> {
+                  val arr = JSONArray(raw)
+                  val out = mutableListOf<UnifiedWorkout>()
+                  val zone = ZoneId.systemDefault()
+                  val dateFmt = DateTimeFormatter.ofPattern("dd.MM.").withZone(zone)
+                  val estMaxHr = (211 - 0.64 * userAge).roundToInt().coerceIn(160, 205)
+
+                  for (i in 0 until arr.length()) {
+                      val o = arr.getJSONObject(i)
+                      val startStr = o.optString("start_date_local", "")
+                      if (startStr.length < 19) continue
+                      val startInstant = try {
+                          LocalDateTime.parse(startStr.substring(0, 19)).atZone(zone).toInstant()
+                      } catch (_: Exception) { continue }
+
+                      val movingSec = o.optLong("moving_time", o.optLong("elapsed_time", 1800L)).coerceAtLeast(60L)
+                      val durMin = (movingSec / 60L).coerceAtLeast(1L)
+                      val endInstant = startInstant.plusSeconds(movingSec)
+
+                      val rawSrc = o.optString("source", "").uppercase()
+                      val name = o.optString("name", "").ifBlank { o.optString("type", "Training") }
+                      val type = o.optString("type", "")
+                      val isZwift = rawSrc.contains("ZWIFT") || name.lowercase().let { n ->
+                          listOf("zwift", "watopia", "makuri", "innsbruck", "richmond", "yorkshire").any { n.contains(it) }
+                      }
+                      val srcLabel = if (isZwift) "Zwift (via Intervals)" else "Garmin (via Intervals)"
+                      val isStrength = type.contains("Weight", true) || type.contains("Strength", true)
+
+                      val avgHr = if (!o.isNull("average_heartrate")) o.optDouble("average_heartrate").roundToInt().takeIf { it in 45..220 } else null
+                      val maxHr = if (!o.isNull("max_heartrate")) o.optDouble("max_heartrate").roundToInt().takeIf { it in 55..230 } else null
+                      val avgW = if (!o.isNull("average_watts")) o.optDouble("average_watts").roundToInt().takeIf { it > 0 } else null
+                      val npW = if (!o.isNull("weighted_average_watts")) o.optDouble("weighted_average_watts").roundToInt().takeIf { it > 0 } else null
+                      val distKm = if (!o.isNull("distance")) ((o.optDouble("distance") / 100.0).roundToInt() / 10.0).takeIf { it > 0.0 } else null
+                      val kcal = if (!o.isNull("calories")) o.optInt("calories").takeIf { it in 10..3500 } ?: (durMin * 7).toInt() else (durMin * 7).toInt()
+
+                      val load = if (!o.isNull("icu_training_load") && o.optDouble("icu_training_load") > 0.0) {
+                          ((o.optDouble("icu_training_load") / 8.5).coerceIn(1.5, 20.8) * 10.0).roundToInt() / 10.0
+                      } else {
+                          val hrRatio = ((avgHr ?: 120).toDouble() / estMaxHr).coerceIn(0.45, 1.0)
+                          ((ln(1.0 + durMin * hrRatio * 0.45) * 3.8).coerceIn(1.5, 20.5) * 10.0).roundToInt() / 10.0
+                      }
+
+                      val isNonStep = isStrength || isZwift || type.contains("Ride", true) || type.contains("Cycling", true) || type.contains("Row", true)
+
+                      out.add(
+                          UnifiedWorkout(
+                              id = "icu_${o.optString("id", "${startInstant.epochSecond}")}",
+                              dateLabel = dateFmt.format(startInstant),
+                              title = name,
+                              startTime = startInstant,
+                              endTime = endInstant,
+                              durationMinutes = durMin,
+                              avgHeartRate = avgHr,
+                              maxHeartRate = maxHr,
+                              avgWatts = avgW,
+                              normalizedWatts = npW,
+                              distanceKm = distKm,
+                              hrCurve = emptyList(),
+                              zoneMinutes = emptyList(),
+                              activeKcal = kcal,
+                              strainScore = load,
+                              sourceSummary = srcLabel,
+                              isStrength = isStrength,
+                              isNonStepActivity = isNonStep,
+                              muscleGroups = emptySet()
+                          )
+                      )
+                  }
+                  return out
               }
           }
           EOF
@@ -466,6 +692,8 @@ jobs:
 
           class HealthFusionEngine(private val context: Context) {
 
+              private val intervalsClient = IntervalsClient()
+
               companion object {
                   const val PERMISSION_HISTORY = "android.permission.health.READ_HEALTH_DATA_HISTORY"
 
@@ -477,41 +705,45 @@ jobs:
                       HealthPermission.getReadPermission(HeartRateVariabilityRmssdRecord::class),
                       HealthPermission.getReadPermission(SleepSessionRecord::class),
                       HealthPermission.getReadPermission(ActiveCaloriesBurnedRecord::class),
+                      HealthPermission.getReadPermission(SkinTemperatureRecord::class),
+                      HealthPermission.getReadPermission(OxygenSaturationRecord::class),
+                      HealthPermission.getReadPermission(RespiratoryRateRecord::class),
+                      HealthPermission.getReadPermission(WeightRecord::class),
+                      HealthPermission.getReadPermission(BodyFatRecord::class),
+                      HealthPermission.getReadPermission(LeanBodyMassRecord::class),
+                      HealthPermission.getReadPermission(BoneMassRecord::class),
+                      HealthPermission.getReadPermission(BodyWaterMassRecord::class),
                       HealthPermission.getReadPermission(Vo2MaxRecord::class),
                       PERMISSION_HISTORY
                   )
               }
 
-              private suspend inline fun <reified T : Record> readAllRecords(
-                  client: HealthConnectClient,
-                  start: Instant,
-                  end: Instant
-              ): List<T> {
-                  val all = mutableListOf<T>()
-                  var token: String? = null
-                  do {
-                      val resp = client.readRecords(
-                          ReadRecordsRequest(T::class, TimeRangeFilter.between(start, end), pageToken = token)
-                      )
-                      all.addAll(resp.records)
-                      token = resp.pageToken
-                  } while (token != null)
-                  return all
+              private suspend inline fun <reified T : Record> readAll(client: HealthConnectClient, start: Instant, end: Instant): List<T> {
+                  return try {
+                      val list = mutableListOf<T>()
+                      var token: String? = null
+                      do {
+                          val res = client.readRecords(ReadRecordsRequest(T::class, TimeRangeFilter.between(start, end), pageToken = token))
+                          list.addAll(res.records)
+                          token = res.pageToken
+                      } while (token != null)
+                      list
+                  } catch (_: Exception) { emptyList() }
               }
 
-              private fun classifySource(packageName: String, titleOrNotes: String = ""): DataSource {
-                  val pkg = packageName.lowercase()
-                  val text = titleOrNotes.lowercase()
+              private fun classifyPkg(pkgRaw: String): DataSource {
+                  val pkg = pkgRaw.lowercase()
                   return when {
-                      pkg.contains("zwift") || listOf("zwift", "watopia", "makuri", "innsbruck", "richmond", "yorkshire").any { text.contains(it) } -> DataSource.ZWIFT
                       pkg.contains("garmin") -> DataSource.GARMIN
+                      pkg.contains("zwift") -> DataSource.ZWIFT
                       pkg.contains("speediance") -> DataSource.SPEEDIANCE
-                      pkg.contains("google") || pkg.contains("healthdata") || pkg.contains("fit") || pkg.contains("shealth") || pkg.contains("samsung") -> DataSource.GOOGLE_SAMSUNG
+                      pkg.contains("withings") -> DataSource.WITHINGS
+                      pkg.contains("fitbit") -> DataSource.FITBIT
                       else -> DataSource.OTHER
                   }
               }
 
-              suspend fun buildReport(chronologicalAge: Int, range: TimeRangeOption): HealthReport {
+              suspend fun buildReport(age: Int, range: TimeRangeOption, intervalsApiKey: String): HealthReport {
                   val client = HealthConnectClient.getOrCreate(context)
                   val prefs = context.getSharedPreferences("fold_health_prefs", Context.MODE_PRIVATE)
                   val zone = ZoneId.systemDefault()
@@ -521,1067 +753,1180 @@ jobs:
                   val filterStart = if (range == TimeRangeOption.TODAY) startOfToday else startOfToday.minus(Duration.ofDays(range.days - 1))
                   val logs = mutableListOf<String>()
 
-                  val rawWorkouts90d = readAllRecords<ExerciseSessionRecord>(client, historyStart, now)
-                  val rawHr90d = readAllRecords<HeartRateRecord>(client, historyStart, now)
-                  val rawCalories90d = readAllRecords<ActiveCaloriesBurnedRecord>(client, historyStart, now)
-                  val rawSteps90d = readAllRecords<StepsRecord>(client, historyStart, now)
-                  val rawRestingHr30d = readAllRecords<RestingHeartRateRecord>(client, startOfToday.minus(Duration.ofDays(30)), now)
-                  val rawHrv30d = try { readAllRecords<HeartRateVariabilityRmssdRecord>(client, startOfToday.minus(Duration.ofDays(30)), now) } catch (_: Exception) { emptyList() }
-                  val rawSleep14d = readAllRecords<SleepSessionRecord>(client, startOfToday.minus(Duration.ofDays(14)), now)
-                  val vo2Max = try {
-                      readAllRecords<Vo2MaxRecord>(client, historyStart, now)
-                          .sortedWith(compareByDescending<Vo2MaxRecord> { classifySource(it.metadata.dataOrigin.packageName).cardioPriority }.thenByDescending { it.time })
-                          .firstOrNull()?.vo2MillilitersPerMinuteKilogram
-                  } catch (_: Exception) { null }
+                  // 1. Garmin & Zwift über Intervals.icu abrufen (hat höchste Priorität!)
+                  val icuData = intervalsClient.fetchGarminAndZwift(intervalsApiKey, 89L, age)
+                  if (intervalsApiKey.isNotBlank()) logs.add(icuData.statusNote)
 
-                  val liveMerged90d = mergeWorkouts(rawWorkouts90d, rawHr90d, rawCalories90d, prefs, logs, filterStart, chronologicalAge)
-                  val archivedMerged = saveAndMergeLocalArchive(prefs, liveMerged90d)
+                  // 2. Health Connect (Fitbit Air, Withings, Speediance) abrufen
+                  val hcWorkouts = readAll<ExerciseSessionRecord>(client, historyStart, now)
+                  val hcHr = readAll<HeartRateRecord>(client, historyStart, now)
+                  val hcCal = readAll<ActiveCaloriesBurnedRecord>(client, historyStart, now)
+                  val hcSteps = readAll<StepsRecord>(client, historyStart, now)
+                  val hcRhr = readAll<RestingHeartRateRecord>(client, startOfToday.minus(Duration.ofDays(30)), now)
+                  val hcHrv = readAll<HeartRateVariabilityRmssdRecord>(client, startOfToday.minus(Duration.ofDays(30)), now)
+                  val hcSleep = readAll<SleepSessionRecord>(client, startOfToday.minus(Duration.ofDays(14)), now)
+                  val hcSkinTemp = readAll<SkinTemperatureRecord>(client, startOfToday.minus(Duration.ofDays(14)), now)
+                  val hcSpo2 = readAll<OxygenSaturationRecord>(client, startOfToday.minus(Duration.ofDays(7)), now)
+                  val hcResp = readAll<RespiratoryRateRecord>(client, startOfToday.minus(Duration.ofDays(7)), now)
+                  val hcVo2 = readAll<Vo2MaxRecord>(client, historyStart, now)
 
-                  val filteredWorkouts = archivedMerged.filter { it.endTime >= filterStart }
-                  val workouts30d = archivedMerged.filter { it.endTime >= startOfToday.minus(Duration.ofDays(30)) }
-                  val todayWorkouts = archivedMerged.filter { it.endTime >= startOfToday }
+                  // 3. Withings Körperwerte
+                  val bodyComp = readWithingsBodyComp(client, historyStart, now, icuData.wellnessDays, zone)
 
-                  val periodStepsRaw = rawSteps90d.filter { it.endTime >= filterStart }
-                  val periodCleanSteps = filterAndDeduplicateSteps(periodStepsRaw, filteredWorkouts, logs, recordLogs = true)
-                  val steps30dClean = filterAndDeduplicateSteps(rawSteps90d.filter { it.endTime >= startOfToday.minus(Duration.ofDays(30)) }, workouts30d, mutableListOf(), recordLogs = false)
-                  val periodCleanKcal = deduplicateCalories(rawCalories90d.filter { it.endTime >= filterStart }, filteredWorkouts, logs)
+                  // 4. Trainings fusionieren (Speediance für Kraft, Garmin/Zwift für Ausdauer + Fitbit Puls-Kurve falls vorhanden)
+                  val mergedLive = fuseAllWorkouts(icuData.workouts, hcWorkouts, hcHr, hcCal, prefs, logs, filterStart, age)
+                  val archiveAll = saveAndLoadArchive(prefs, mergedLive)
+                  val filteredWorkouts = archiveAll.filter { it.endTime >= filterStart }
+                  val workouts30d = archiveAll.filter { it.endTime >= startOfToday.minus(Duration.ofDays(30)) }
+                  val todayWorkouts = archiveAll.filter { it.endTime >= startOfToday }
 
-                  // Aktuellster echter Ruhepuls (Garmin bevorzugt, nach Zeit sortiert + Fallback auf Nacht-HR)
-                  val validResting = rawRestingHr30d.filter { it.beatsPerMinute in 40..125 }
-                      .sortedWith(compareByDescending<RestingHeartRateRecord> { classifySource(it.metadata.dataOrigin.packageName).cardioPriority }.thenByDescending { it.time })
-                  val latestRestingHr = validResting.firstOrNull()?.beatsPerMinute?.toInt()
-                      ?: estimateOvernightRestingHr(rawHr90d, startOfToday.minus(Duration.ofHours(14)), now)
+                  // 5. Garmin vs. Fitbit Air Priorisierung & Vergleich
+                  val latestIcu = icuData.wellnessDays.sortedByDescending { it.dateIso }.firstOrNull { it.restingHr != null || it.hrvRmssd != null || it.sleepMinutes != null }
+                  val fitbitRhrRec = hcRhr.filter { it.beatsPerMinute in 38..125 }.maxByOrNull { it.time }
+                  val fitbitHrvRec = hcHrv.filter { it.heartRateVariabilityMillis in 8.0..180.0 }.maxByOrNull { it.time }
 
-                  // Aktuellste HRV (RMSSD)
-                  val validHrv = rawHrv30d.filter { it.heartRateVariabilityMillis in 8.0..180.0 }
-                      .sortedWith(compareByDescending<HeartRateVariabilityRmssdRecord> { classifySource(it.metadata.dataOrigin.packageName).cardioPriority }.thenByDescending { it.time })
-                  val latestHrvMs = validHrv.firstOrNull()?.heartRateVariabilityMillis
+                  val garminRhr = latestIcu?.restingHr
+                  val fitbitRhr = fitbitRhrRec?.beatsPerMinute?.toInt()
+                  val chosenRhr = garminRhr ?: fitbitRhr
+                  val rhrSource = if (garminRhr != null) "Garmin (Intervals.icu)" else if (fitbitRhr != null) "Fitbit Air (Health Connect)" else "Keine Daten"
 
-                  val rhrTrend7d = buildDailySeries(7, zone) { dStart, dEnd ->
-                      validResting.firstOrNull { it.time in dStart..dEnd }?.beatsPerMinute?.toFloat()
+                  val garminHrv = latestIcu?.hrvRmssd
+                  val fitbitHrv = fitbitHrvRec?.heartRateVariabilityMillis
+                  val chosenHrv = garminHrv ?: fitbitHrv
+                  val hrvSource = if (garminHrv != null) "Garmin (Intervals.icu)" else if (fitbitHrv != null) "Fitbit Air (Health Connect)" else "Keine Daten"
+
+                  val vo2Max = icuData.wellnessDays.sortedByDescending { it.dateIso }.firstOrNull { it.vo2Max != null }?.vo2Max
+                      ?: hcVo2.maxByOrNull { it.time }?.vo2MillilitersPerMinuteKilogram
+
+                  // Schritte (Garmin bevorzugt, Fitbit als Vergleich)
+                  val todayStr = LocalDate.now().toString()
+                  val garminTodaySteps = icuData.wellnessDays.firstOrNull { it.dateIso == todayStr }?.steps
+                  val hcStepsFiltered = filterSteps(hcSteps.filter { it.endTime >= filterStart }, filteredWorkouts)
+                  val fitbitTodaySteps = filterSteps(hcSteps.filter { it.endTime >= startOfToday }, todayWorkouts)
+
+                  val icuPeriodSteps = icuData.wellnessDays.filter {
+                      try { !LocalDate.parse(it.dateIso).atStartOfDay(zone).toInstant().isBefore(filterStart) } catch (_: Exception) { false }
+                  }.sumOf { it.steps ?: 0L }
+
+                  val periodSteps = if (icuPeriodSteps > 0L) icuPeriodSteps else hcStepsFiltered
+                  val stepsSource = if (icuPeriodSteps > 0L) "Garmin (priorisiert)" else "Fitbit Air (Health Connect)"
+
+                  val steps30dAvg = (filterSteps(hcSteps.filter { it.endTime >= startOfToday.minus(Duration.ofDays(30)) }, workouts30d) / 30L)
+                      .coerceAtLeast(icuData.wellnessDays.takeLast(30).mapNotNull { it.steps }.let { if (it.isEmpty()) 0L else it.average().toLong() })
+
+                  val periodKcal = deduplicateCalories(hcCal.filter { it.endTime >= filterStart }, filteredWorkouts)
+
+                  // Hauttemperatur, SpO2, Atemfrequenz (Fitbit Air / Health Connect + Garmin Wellness)
+                  val skinDeltas = hcSkinTemp.flatMap { rec -> rec.deltas.map { it.time to it.delta.inCelsius } }.sortedBy { it.first }
+                  val latestSkinTemp = skinDeltas.lastOrNull()?.second?.let { (it * 100.0).roundToInt() / 100.0 }
+                  val skinTrend7d = buildSeries(7, zone) { s, e ->
+                      val vals = skinDeltas.filter { it.first in s..e }.map { it.second }
+                      if (vals.isEmpty()) 0f else vals.average().toFloat()
                   }
-                  val hrvTrend7d = buildDailySeries(7, zone) { dStart, dEnd ->
-                      validHrv.firstOrNull { it.time in dStart..dEnd }?.heartRateVariabilityMillis?.toFloat()
-                  }
 
-                  val sleepDetail = buildSleepDetail(rawSleep14d, startOfToday, zone, logs)
-                  val recoveryPercent = calculateWhoopRecovery(latestRestingHr, latestHrvMs, sleepDetail?.sleepPerformancePercent, todayWorkouts)
-                  val dayStrain = calculateDayStrain(todayWorkouts, periodCleanSteps, range == TimeRangeOption.TODAY)
+                  val latestSpo2 = latestIcu?.spo2 ?: hcSpo2.maxByOrNull { it.time }?.percentage?.value
+                  val latestResp = latestIcu?.respiration ?: hcResp.maxByOrNull { it.time }?.rate
 
-                  val fitnessProfile = MuscleAndFitnessAnalyzer.calculateFitnessProfile(
-                      chronologicalAge, vo2Max, latestRestingHr, latestHrvMs,
-                      sleepDetail?.totalMinutes?.let { it / 60.0 }, workouts30d, steps30dClean / 30L
+                  // Schlaf & Vergleich
+                  val sleepDetail = buildSleep(hcSleep, icuData.wellnessDays, startOfToday, zone)
+                  val fitbitLastSleepMin = hcSleep.filter { it.endTime >= startOfToday.minus(Duration.ofHours(16)) }
+                      .maxByOrNull { Duration.between(it.startTime, it.endTime).toMinutes() }
+                      ?.let { Duration.between(it.startTime, it.endTime).toMinutes() }
+
+                  val comparison = DeviceComparison(
+                      garminRhr, fitbitRhr, garminHrv, fitbitHrv,
+                      latestIcu?.sleepMinutes, fitbitLastSleepMin, garminTodaySteps, fitbitTodaySteps.takeIf { it > 0L }
                   )
 
-                  val muscleSets = mutableMapOf<MuscleGroup, Int>().apply { MuscleGroup.values().forEach { put(it, 0) } }
-                  for (w in filteredWorkouts) for (mg in w.muscleGroups) muscleSets[mg] = (muscleSets[mg] ?: 0) + 1
-                  if (logs.isEmpty()) logs.add("Garmin-, Zwift- & Speediance-Regeln aktiv: Alle Daten im Zeitraum (${range.label}) plausibel.")
+                  val rhrTrend7d = buildSeries(7, zone) { s, e ->
+                      val dStr = LocalDate.ofInstant(s.plusSeconds(3600), zone).toString()
+                      icuData.wellnessDays.firstOrNull { it.dateIso == dStr }?.restingHr?.toFloat()
+                          ?: hcRhr.firstOrNull { it.time in s..e }?.beatsPerMinute?.toFloat()
+                  }
+                  val hrvTrend7d = buildSeries(7, zone) { s, e ->
+                      val dStr = LocalDate.ofInstant(s.plusSeconds(3600), zone).toString()
+                      icuData.wellnessDays.firstOrNull { it.dateIso == dStr }?.hrvRmssd?.toFloat()
+                          ?: hcHrv.firstOrNull { it.time in s..e }?.heartRateVariabilityMillis?.toFloat()
+                  }
+
+                  val recovery = computeRecovery(chosenRhr, chosenHrv, sleepDetail?.performancePercent, todayWorkouts)
+                  val strain = computeStrain(todayWorkouts, periodSteps, range == TimeRangeOption.TODAY)
+                  val fitnessProfile = FitnessAgeEngine.evaluate(
+                      age, chosenRhr, chosenHrv, vo2Max, bodyComp.bodyFatPercent,
+                      sleepDetail?.totalMinutes?.let { it / 60.0 }, workouts30d, steps30dAvg
+                  )
+
+                  val muscleMap = mutableMapOf<MuscleGroup, Int>().apply { MuscleGroup.values().forEach { put(it, 0) } }
+                  for (w in filteredWorkouts) for (mg in w.muscleGroups) muscleMap[mg] = (muscleMap[mg] ?: 0) + 1
 
                   return HealthReport(
                       LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
-                      range, periodCleanSteps, periodStepsRaw.sumOf { it.count }, periodCleanKcal,
-                      latestRestingHr, latestHrvMs, rhrTrend7d, hrvTrend7d, sleepDetail,
-                      filteredWorkouts, archivedMerged.size, muscleSets, logs,
-                      recoveryPercent, dayStrain, fitnessProfile
+                      range, periodSteps, stepsSource, periodKcal,
+                      chosenRhr, rhrSource, chosenHrv, hrvSource,
+                      latestSkinTemp, latestSpo2, latestResp, vo2Max,
+                      rhrTrend7d, hrvTrend7d, skinTrend7d, sleepDetail, bodyComp, comparison,
+                      filteredWorkouts, archiveAll.size, muscleMap, logs, recovery, strain, fitnessProfile
                   )
               }
           EOF
 
                     cat << 'EOF' >> app/src/main/java/de/fold8/healthcoach/HealthFusionEngine.kt
 
-              private fun estimateOvernightRestingHr(hrRecords: List<HeartRateRecord>, start: Instant, end: Instant): Int? {
-                  val samples = hrRecords.filter { it.endTime >= start && it.startTime <= end }
-                      .sortedByDescending { classifySource(it.metadata.dataOrigin.packageName).cardioPriority }
-                      .flatMap { it.samples }
-                      .filter { it.time in start..end && it.beatsPerMinute in 40..120 }
-                      .map { it.beatsPerMinute.toInt() }
-                      .sorted()
-                  if (samples.size < 10) return null
-                  return samples[(samples.size * 0.12).toInt()]
+              private suspend fun readWithingsBodyComp(
+                  client: HealthConnectClient,
+                  start: Instant,
+                  end: Instant,
+                  icuWellness: List<IntervalsWellnessDay>,
+                  zone: ZoneId
+              ): BodyComposition {
+                  val weights = readAll<WeightRecord>(client, start, end).sortedBy { it.time }
+                  val fats = readAll<BodyFatRecord>(client, start, end).sortedBy { it.time }
+                  val leans = readAll<LeanBodyMassRecord>(client, start, end).sortedBy { it.time }
+                  val bones = readAll<BoneMassRecord>(client, start, end).sortedBy { it.time }
+                  val waters = readAll<BodyWaterMassRecord>(client, start, end).sortedBy { it.time }
+
+                  val latestW = weights.lastOrNull()
+                  val weightKg = latestW?.weight?.inKilograms?.let { (it * 10.0).roundToInt() / 10.0 }
+                      ?: icuWellness.lastOrNull { it.weightKg != null }?.weightKg
+                  val fatPct = fats.lastOrNull()?.percentage?.value?.let { (it * 10.0).roundToInt() / 10.0 }
+                  val muscleKg = leans.lastOrNull()?.mass?.inKilograms?.let { (it * 10.0).roundToInt() / 10.0 }
+                  val boneKg = bones.lastOrNull()?.mass?.inKilograms?.let { (it * 10.0).roundToInt() / 10.0 }
+                  val waterKg = waters.lastOrNull()?.mass?.inKilograms?.let { (it * 10.0).roundToInt() / 10.0 }
+                  val dateLbl = latestW?.time?.let { DateTimeFormatter.ofPattern("dd.MM.").withZone(zone).format(it) }
+
+                  val trend = weights.takeLast(7).map {
+                      DateTimeFormatter.ofPattern("dd.MM").withZone(zone).format(it.time) to it.weight.inKilograms.toFloat()
+                  }
+                  return BodyComposition(weightKg, fatPct, muscleKg, boneKg, waterKg, dateLbl, trend)
               }
 
-              private fun buildDailySeries(days: Int, zone: ZoneId, extractor: (Instant, Instant) -> Float?): List<Pair<String, Float>> {
-                  val fmt = DateTimeFormatter.ofPattern("dd.MM")
-                  val today = LocalDate.now()
-                  return (days - 1 downTo 0).map { offset ->
-                      val d = today.minusDays(offset.toLong())
-                      val s = d.atStartOfDay(zone).toInstant()
-                      val e = d.plusDays(1).atStartOfDay(zone).toInstant()
-                      d.format(fmt) to (extractor(s, e) ?: 0f)
+              private fun fuseAllWorkouts(
+                  icuWorkouts: List<UnifiedWorkout>,
+                  hcSessions: List<ExerciseSessionRecord>,
+                  hcHr: List<HeartRateRecord>,
+                  hcCal: List<ActiveCaloriesBurnedRecord>,
+                  prefs: android.content.SharedPreferences,
+                  logs: MutableList<String>,
+                  filterStart: Instant,
+                  age: Int
+              ): List<UnifiedWorkout> {
+                  val zone = ZoneId.systemDefault()
+                  val dateFmt = DateTimeFormatter.ofPattern("dd.MM.").withZone(zone)
+                  val estMaxHr = (211 - 0.64 * age).roundToInt().coerceIn(160, 205)
+
+                  val hcConverted = hcSessions.map { s ->
+                      val src = classifyPkg(s.metadata.dataOrigin.packageName)
+                      val durMin = Duration.between(s.startTime, s.endTime).toMinutes().coerceAtLeast(1L)
+                      val isStr = src == DataSource.SPEEDIANCE || s.exerciseType in setOf(
+                          ExerciseSessionRecord.EXERCISE_TYPE_STRENGTH_TRAINING,
+                          ExerciseSessionRecord.EXERCISE_TYPE_WEIGHTLIFTING,
+                          ExerciseSessionRecord.EXERCISE_TYPE_CALISTHENICS
+                      )
+                      val samples = hcHr.filter { it.endTime >= s.startTime && it.startTime <= s.endTime }
+                          .flatMap { it.samples }.filter { it.time in s.startTime..s.endTime }
+                          .sortedBy { it.time }.map { it.beatsPerMinute.toInt() }
+                      val avgHr = if (samples.isNotEmpty()) samples.average().roundToInt() else null
+                      val maxHr = samples.maxOrNull()
+                      val curve = downsample(samples, 36)
+                      val zones = computeZones(samples, durMin.toInt(), estMaxHr)
+                      val kcal = hcCal.filter { overlap(s.startTime, s.endTime, it.startTime, it.endTime) >= 0.50 }
+                          .map { it.energy.inKilocalories.roundToInt() }.firstOrNull { it in 10..2500 } ?: (durMin * 6).toInt()
+                      val id = "hc_${s.startTime.epochSecond}_${durMin}"
+                      val title = s.title?.takeIf { it.isNotBlank() } ?: if (isStr) "Krafttraining (${src.label})" else "Training (${src.label})"
+                      val muscles = FitnessAgeEngine.detectMuscles(s, null, prefs.getStringSet("muscles_$id", emptySet()) ?: emptySet())
+                      val strain = ((ln(1.0 + durMin * ((avgHr ?: 115).toDouble() / estMaxHr) * 0.45) * 3.8).coerceIn(1.5, 20.5) * 10.0).roundToInt() / 10.0
+                      val isNonStep = isStr || s.exerciseType in setOf(ExerciseSessionRecord.EXERCISE_TYPE_BIKING, ExerciseSessionRecord.EXERCISE_TYPE_BIKING_STATIONARY)
+                      UnifiedWorkout(id, dateFmt.format(s.startTime), title, s.startTime, s.endTime, durMin, avgHr, maxHr, null, null, null, curve, zones, kcal, strain, src.label, isStr, isNonStep, muscles)
                   }
-              }
 
-              private fun buildSleepDetail(records: List<SleepSessionRecord>, startOfToday: Instant, zone: ZoneId, logs: MutableList<String>): SleepDetail? {
-                  if (records.isEmpty()) return null
-                  val lookback = startOfToday.minus(Duration.ofHours(16))
-                  val lastNightRecords = records.filter { it.endTime >= lookback }
-                  val best = (if (lastNightRecords.isNotEmpty()) lastNightRecords else records)
-                      .maxByOrNull { classifySource(it.metadata.dataOrigin.packageName).cardioPriority * 10000L + Duration.between(it.startTime, it.endTime).toMinutes() }
-                      ?: return null
+                  val combined = (icuWorkouts + hcConverted).sortedBy { it.startTime }
+                  val used = BooleanArray(combined.size)
+                  val merged = mutableListOf<UnifiedWorkout>()
 
-                  if (lastNightRecords.size > 1) {
-                      logs.add("Schlaf-Priorität: ${classifySource(best.metadata.dataOrigin.packageName).label} übernommen.")
-                  }
+                  for (i in combined.indices) {
+                      if (used[i]) continue
+                      var cur = combined[i]
+                      for (j in i + 1 until combined.size) {
+                          if (used[j]) continue
+                          val other = combined[j]
+                          if (overlap(cur.startTime, cur.endTime, other.startTime, other.endTime) >= 0.50) {
+                              used[j] = true
+                              val keepStrength = cur.isStrength || other.isStrength
+                              val primary = when {
+                                  keepStrength && other.sourceSummary.contains("Speediance", true) -> other
+                                  keepStrength && cur.sourceSummary.contains("Speediance", true) -> cur
+                                  other.sourceSummary.contains("Zwift", true) -> other
+                                  cur.sourceSummary.contains("Zwift", true) -> cur
+                                  other.sourceSummary.contains("Garmin", true) -> other
+                                  else -> cur
+                              }
+                              val secondary = if (primary === cur) other else cur
+                              val manualMuscles = prefs.getStringSet("muscles_${primary.id}", emptySet()) ?: emptySet()
+                              val finalMuscles = if (manualMuscles.isNotEmpty()) {
+                                  manualMuscles.mapNotNull { n -> MuscleGroup.values().firstOrNull { it.name == n } }.toSet()
+                              } else (primary.muscleGroups + secondary.muscleGroups)
 
-                  var deep = 0L; var rem = 0L; var light = 0L; var awake = 0L
-                  for (st in best.stages) {
-                      val mins = Duration.between(st.startTime, st.endTime).toMinutes().coerceAtLeast(0L)
-                      when (st.stage) {
-                          SleepSessionRecord.STAGE_TYPE_DEEP -> deep += mins
-                          SleepSessionRecord.STAGE_TYPE_REM -> rem += mins
-                          SleepSessionRecord.STAGE_TYPE_AWAKE, SleepSessionRecord.STAGE_TYPE_OUT_OF_BED -> awake += mins
-                          else -> light += mins
+                              if (primary.endTime >= filterStart) {
+                                  logs.add("Fusioniert: '${primary.title}' (${primary.sourceSummary} + ${secondary.sourceSummary})")
+                              }
+                              cur = primary.copy(
+                                  avgHeartRate = primary.avgHeartRate ?: secondary.avgHeartRate,
+                                  maxHeartRate = primary.maxHeartRate ?: secondary.maxHeartRate,
+                                  hrCurve = if (primary.hrCurve.size >= 2) primary.hrCurve else secondary.hrCurve,
+                                  zoneMinutes = if (primary.zoneMinutes.isNotEmpty()) primary.zoneMinutes else secondary.zoneMinutes,
+                                  sourceSummary = "${primary.sourceSummary} + ${secondary.sourceSummary}",
+                                  isStrength = keepStrength,
+                                  muscleGroups = finalMuscles
+                              )
+                          }
                       }
+                      val savedMuscles = prefs.getStringSet("muscles_${cur.id}", emptySet()) ?: emptySet()
+                      if (savedMuscles.isNotEmpty()) {
+                          cur = cur.copy(muscleGroups = savedMuscles.mapNotNull { n -> MuscleGroup.values().firstOrNull { it.name == n } }.toSet())
+                      }
+                      merged.add(cur)
                   }
-                  val spanMin = Duration.between(best.startTime, best.endTime).toMinutes().coerceAtLeast(1L)
-                  val asleepMin = if (deep + rem + light > 0L) (deep + rem + light) else (spanMin - awake).coerceAtLeast(1L)
-                  if (deep + rem + light == 0L) light = asleepMin
-                  val eff = ((asleepMin.toDouble() / (asleepMin + awake).coerceAtLeast(1L)) * 100.0).roundToInt().coerceIn(50, 99)
-                  val perf = ((asleepMin / 450.0) * 100.0).roundToInt().coerceIn(25, 100)
-
-                  val daily7d = buildDailySeries(7, zone) { dStart, dEnd ->
-                      val rec = records.filter { it.endTime in dStart..dEnd }
-                          .maxByOrNull { classifySource(it.metadata.dataOrigin.packageName).cardioPriority * 10000L + Duration.between(it.startTime, it.endTime).toMinutes() }
-                      rec?.let { Duration.between(it.startTime, it.endTime).toMinutes() / 60f }
-                  }
-
-                  return SleepDetail(
-                      asleepMin, deep, rem, light, awake, eff, perf,
-                      classifySource(best.metadata.dataOrigin.packageName).label, daily7d
-                  )
+                  return merged
               }
 
-              private fun saveAndMergeLocalArchive(prefs: android.content.SharedPreferences, fresh: List<UnifiedWorkout>): List<UnifiedWorkout> {
+              private fun saveAndLoadArchive(prefs: android.content.SharedPreferences, fresh: List<UnifiedWorkout>): List<UnifiedWorkout> {
                   val map = LinkedHashMap<String, UnifiedWorkout>()
-                  val rawJson = prefs.getString("workout_archive_v3", null)
-                  if (!rawJson.isNullOrBlank()) {
+                  prefs.getString("workout_archive_v4", null)?.let { raw ->
                       try {
-                          val arr = JSONArray(rawJson)
+                          val arr = JSONArray(raw)
                           for (i in 0 until arr.length()) {
                               val o = arr.getJSONObject(i)
                               val id = o.getString("id")
-                              val mgSet = mutableSetOf<MuscleGroup>()
-                              val mgArr = o.optJSONArray("muscles") ?: JSONArray()
-                              for (m in 0 until mgArr.length()) MuscleGroup.values().firstOrNull { it.name == mgArr.getString(m) }?.let { mgSet.add(it) }
-                              val curve = mutableListOf<Int>()
-                              val cArr = o.optJSONArray("hrCurve") ?: JSONArray()
-                              for (c in 0 until cArr.length()) curve.add(cArr.getInt(c))
-                              val zones = mutableListOf<Int>()
-                              val zArr = o.optJSONArray("zones") ?: JSONArray()
-                              for (z in 0 until zArr.length()) zones.add(zArr.getInt(z))
+                              val mgs = mutableSetOf<MuscleGroup>()
+                              o.optJSONArray("muscles")?.let { ma -> for (k in 0 until ma.length()) MuscleGroup.values().firstOrNull { it.name == ma.getString(k) }?.let { mgs.add(it) } }
+                              val curve = mutableListOf<Int>().apply { o.optJSONArray("curve")?.let { ca -> for (k in 0 until ca.length()) add(ca.getInt(k)) } }
+                              val zones = mutableListOf<Int>().apply { o.optJSONArray("zones")?.let { za -> for (k in 0 until za.length()) add(za.getInt(k)) } }
                               map[id] = UnifiedWorkout(
-                                  id, o.getString("dateLabel"), o.getString("title"),
-                                  Instant.ofEpochSecond(o.getLong("startSec")), Instant.ofEpochSecond(o.getLong("endSec")),
-                                  o.getLong("durMin"),
-                                  if (o.has("avgHr") && !o.isNull("avgHr")) o.getInt("avgHr") else null,
-                                  if (o.has("maxHr") && !o.isNull("maxHr")) o.getInt("maxHr") else null,
-                                  curve, zones, o.getInt("kcal"), o.optDouble("strain", 6.0),
-                                  o.getString("source"), o.getBoolean("isStrength"), o.getBoolean("isNonStep"), mgSet
+                                  id, o.getString("date"), o.getString("title"),
+                                  Instant.ofEpochSecond(o.getLong("s")), Instant.ofEpochSecond(o.getLong("e")),
+                                  o.getLong("dur"), o.optInt("avgHr").takeIf { it > 0 }, o.optInt("maxHr").takeIf { it > 0 },
+                                  o.optInt("avgW").takeIf { it > 0 }, o.optInt("npW").takeIf { it > 0 }, o.optDouble("dist").takeIf { !it.isNaN() && it > 0.0 },
+                                  curve, zones, o.getInt("kcal"), o.optDouble("strain", 5.0), o.getString("src"), o.getBoolean("str"), o.getBoolean("nonStep"), mgs
                               )
                           }
                       } catch (_: Exception) { }
                   }
                   for (w in fresh) map[w.id] = w
-                  val sortedAll = map.values.sortedBy { it.startTime }
-                  val outArr = JSONArray()
-                  for (w in sortedAll) {
-                      outArr.put(JSONObject().put("id", w.id).put("dateLabel", w.dateLabel).put("title", w.title)
-                          .put("startSec", w.startTime.epochSecond).put("endSec", w.endTime.epochSecond)
-                          .put("durMin", w.durationMinutes).put("avgHr", w.avgHeartRate).put("maxHr", w.maxHeartRate)
-                          .put("hrCurve", JSONArray(w.hrCurve)).put("zones", JSONArray(w.zoneMinutes))
-                          .put("kcal", w.activeKcal).put("strain", w.strainScore).put("source", w.sourceSummary)
-                          .put("isStrength", w.isStrength).put("isNonStep", w.isNonStepActivity)
-                          .put("muscles", JSONArray(w.muscleGroups.map { it.name })))
+                  val all = map.values.sortedBy { it.startTime }
+                  val out = JSONArray()
+                  for (w in all) {
+                      out.put(JSONObject().put("id", w.id).put("date", w.dateLabel).put("title", w.title)
+                          .put("s", w.startTime.epochSecond).put("e", w.endTime.epochSecond).put("dur", w.durationMinutes)
+                          .put("avgHr", w.avgHeartRate ?: 0).put("maxHr", w.maxHeartRate ?: 0)
+                          .put("avgW", w.avgWatts ?: 0).put("npW", w.normalizedWatts ?: 0).put("dist", w.distanceKm ?: 0.0)
+                          .put("curve", JSONArray(w.hrCurve)).put("zones", JSONArray(w.zoneMinutes))
+                          .put("kcal", w.activeKcal).put("strain", w.strainScore).put("src", w.sourceSummary)
+                          .put("str", w.isStrength).put("nonStep", w.isNonStepActivity).put("muscles", JSONArray(w.muscleGroups.map { it.name })))
                   }
-                  prefs.edit().putString("workout_archive_v3", outArr.toString()).apply()
-                  return sortedAll
+                  prefs.edit().putString("workout_archive_v4", out.toString()).apply()
+                  return all
               }
 
-              private fun mergeWorkouts(sessions: List<ExerciseSessionRecord>, hrRecords: List<HeartRateRecord>, calRecords: List<ActiveCaloriesBurnedRecord>, prefs: android.content.SharedPreferences, logs: MutableList<String>, filterStart: Instant, userAge: Int): List<UnifiedWorkout> {
-                  val sorted = sessions.sortedBy { it.startTime }
-                  val used = BooleanArray(sorted.size)
-                  val result = mutableListOf<UnifiedWorkout>()
-                  val dateFmt = DateTimeFormatter.ofPattern("dd.MM.").withZone(ZoneId.systemDefault())
-                  val estMaxHr = (211 - 0.64 * userAge).roundToInt().coerceIn(160, 205)
+              private fun buildSleep(hcSleep: List<SleepSessionRecord>, icuDays: List<IntervalsWellnessDay>, startOfToday: Instant, zone: ZoneId): SleepDetail? {
+                  val lastNight = hcSleep.filter { it.endTime >= startOfToday.minus(Duration.ofHours(16)) }
+                      .maxByOrNull { Duration.between(it.startTime, it.endTime).toMinutes() }
+                  val icuLatestSleep = icuDays.sortedByDescending { it.dateIso }.firstOrNull { it.sleepMinutes != null }
 
-                  for (i in sorted.indices) {
-                      if (used[i]) continue
-                      val base = sorted[i]
-                      val baseSrc = classifySource(base.metadata.dataOrigin.packageName, "${base.title ?: ""} ${base.notes ?: ""}")
-                      var partner: ExerciseSessionRecord? = null; var partnerSrc: DataSource? = null
-
-                      for (j in i + 1 until sorted.size) {
-                          if (used[j]) continue
-                          val cand = sorted[j]
-                          if (overlapRatio(base.startTime, base.endTime, cand.startTime, cand.endTime) >= 0.50) {
-                              used[j] = true; partner = cand
-                              partnerSrc = classifySource(cand.metadata.dataOrigin.packageName, "${cand.title ?: ""} ${cand.notes ?: ""}")
-                              break
+                  val totalMin = icuLatestSleep?.sleepMinutes ?: lastNight?.let { Duration.between(it.startTime, it.endTime).toMinutes() } ?: return null
+                  var deep = 0L; var rem = 0L; var light = 0L; var awake = 0L
+                  if (lastNight != null) {
+                      for (st in lastNight.stages) {
+                          val m = Duration.between(st.startTime, st.endTime).toMinutes().coerceAtLeast(0L)
+                          when (st.stage) {
+                              SleepSessionRecord.STAGE_TYPE_DEEP -> deep += m
+                              SleepSessionRecord.STAGE_TYPE_REM -> rem += m
+                              SleepSessionRecord.STAGE_TYPE_AWAKE, SleepSessionRecord.STAGE_TYPE_OUT_OF_BED -> awake += m
+                              else -> light += m
                           }
                       }
-
-                      val isStrength = isStrengthSession(base, baseSrc) || (partner != null && partnerSrc != null && isStrengthSession(partner, partnerSrc))
-                      val primary: ExerciseSessionRecord; val secondary: ExerciseSessionRecord?; val primarySrc: DataSource; val secondarySrc: DataSource?
-                      if (partner != null && partnerSrc != null) {
-                          val swap = if (isStrength) (partnerSrc == DataSource.SPEEDIANCE && baseSrc != DataSource.SPEEDIANCE) else (partnerSrc.cardioPriority > baseSrc.cardioPriority)
-                          if (swap) { primary = partner; primarySrc = partnerSrc; secondary = base; secondarySrc = baseSrc }
-                          else { primary = base; primarySrc = baseSrc; secondary = partner; secondarySrc = partnerSrc }
-                      } else { primary = base; primarySrc = baseSrc; secondary = null; secondarySrc = null }
-
-                      val start = if (secondary != null) minOf(primary.startTime, secondary.startTime) else primary.startTime
-                      val end = if (secondary != null) maxOf(primary.endTime, secondary.endTime) else primary.endTime
-                      val durationMin = Duration.between(start, end).toMinutes().coerceAtLeast(1L)
-                      val workoutId = "w_${start.epochSecond}_${durationMin}"
-
-                      val title = resolveWorkoutTitle(primary, secondary, primarySrc, secondarySrc, isStrength)
-                      val muscles = MuscleAndFitnessAnalyzer.detectMuscleGroups(primary, secondary, prefs.getStringSet("muscles_$workoutId", emptySet()) ?: emptySet())
-
-                      val matchingHrRecs = hrRecords.filter { it.endTime >= start.minusSeconds(60) && it.startTime <= end.plusSeconds(60) }
-                      val bestSourcePkg = matchingHrRecs.maxByOrNull { classifySource(it.metadata.dataOrigin.packageName).cardioPriority }?.metadata?.dataOrigin?.packageName
-                      val rawSamples = matchingHrRecs
-                          .filter { bestSourcePkg == null || it.metadata.dataOrigin.packageName == bestSourcePkg }
-                          .flatMap { it.samples }
-                          .filter { it.time in start.minusSeconds(30)..end.plusSeconds(30) && it.beatsPerMinute in 45..225 }
-                          .sortedBy { it.time }
-
-                      val avgHr = if (rawSamples.isNotEmpty()) rawSamples.map { it.beatsPerMinute.toInt() }.average().roundToInt() else null
-                      val maxHr = rawSamples.maxOfOrNull { it.beatsPerMinute.toInt() }
-                      val hrCurve = downsampleCurve(rawSamples.map { it.beatsPerMinute.toInt() }, 36)
-                      val zoneMinutes = computeHrZones(rawSamples.map { it.beatsPerMinute.toInt() }, durationMin.toInt(), estMaxHr)
-
-                      val kcal = calRecords.filter { overlapRatio(start, end, it.startTime, it.endTime) >= 0.50 }
-                          .sortedByDescending { classifySource(it.metadata.dataOrigin.packageName).cardioPriority }
-                          .map { it.energy.inKilocalories.roundToInt() }.firstOrNull { it in 10..2500 } ?: (durationMin * 6).toInt()
-
-                      val hrRatio = ((avgHr ?: 115).toDouble() / estMaxHr).coerceIn(0.45, 1.0)
-                      val strain = (ln(1.0 + durationMin * hrRatio * 0.45) * 3.8).coerceIn(1.5, 20.5)
-
-                      val sourceSummary = if (secondary != null && secondarySrc != null) {
-                          if (end >= filterStart) logs.add("Fusioniert: '$title' (${primarySrc.label} + ${secondarySrc.label})")
-                          "${primarySrc.label} + ${secondarySrc.label}"
-                      } else primarySrc.label
-
-                      val isNonStep = isStrength || primarySrc == DataSource.ZWIFT || primary.exerciseType in setOf(
-                          ExerciseSessionRecord.EXERCISE_TYPE_BIKING, ExerciseSessionRecord.EXERCISE_TYPE_BIKING_STATIONARY, ExerciseSessionRecord.EXERCISE_TYPE_ROWING_MACHINE
-                      )
-                      result.add(UnifiedWorkout(workoutId, dateFmt.format(start), title, start, end, durationMin, avgHr, maxHr, hrCurve, zoneMinutes, kcal, (strain * 10).roundToInt() / 10.0, sourceSummary, isStrength, isNonStep, muscles))
                   }
-                  return result
-              }
-
-              private fun downsampleCurve(values: List<Int>, targetPoints: Int): List<Int> {
-                  if (values.isEmpty()) return emptyList()
-                  if (values.size <= targetPoints) return values
-                  val step = values.size.toDouble() / targetPoints
-                  return (0 until targetPoints).map { idx -> values[(idx * step).toInt().coerceIn(0, values.lastIndex)] }
-              }
-
-              private fun computeHrZones(values: List<Int>, totalMin: Int, maxHr: Int): List<Int> {
-                  if (values.isEmpty()) return listOf(0, 0, 0, 0, 0)
-                  val counts = IntArray(5)
-                  for (bpm in values) {
-                      val pct = bpm.toDouble() / maxHr
-                      when {
-                          pct < 0.60 -> counts[0]++
-                          pct < 0.70 -> counts[1]++
-                          pct < 0.80 -> counts[2]++
-                          pct < 0.90 -> counts[3]++
-                          else -> counts[4]++
-                      }
+                  if (deep + rem + light == 0L) {
+                      deep = (totalMin * 0.20).roundToInt().toLong()
+                      rem = (totalMin * 0.23).roundToInt().toLong()
+                      light = (totalMin - deep - rem).coerceAtLeast(1L)
                   }
-                  return counts.map { ((it.toDouble() / values.size) * totalMin).roundToInt() }
+                  val eff = ((totalMin.toDouble() / (totalMin + awake).coerceAtLeast(1L)) * 100.0).roundToInt().coerceIn(55, 99)
+                  val perf = ((totalMin / 450.0) * 100.0).roundToInt().coerceIn(25, 100)
+                  val src = if (icuLatestSleep != null) "Garmin + Fitbit Phasen" else "Fitbit Air"
+
+                  val daily7d = buildSeries(7, zone) { s, e ->
+                      val dStr = LocalDate.ofInstant(s.plusSeconds(3600), zone).toString()
+                      icuDays.firstOrNull { it.dateIso == dStr }?.sleepMinutes?.let { it / 60f }
+                          ?: hcSleep.firstOrNull { it.endTime in s..e }?.let { Duration.between(it.startTime, it.endTime).toMinutes() / 60f }
+                  }
+                  return SleepDetail(totalMin, deep, rem, light, awake, eff, perf, src, daily7d)
               }
 
-              private fun isStrengthSession(rec: ExerciseSessionRecord, src: DataSource): Boolean =
-                  src == DataSource.SPEEDIANCE || rec.exerciseType in setOf(ExerciseSessionRecord.EXERCISE_TYPE_STRENGTH_TRAINING, ExerciseSessionRecord.EXERCISE_TYPE_WEIGHTLIFTING, ExerciseSessionRecord.EXERCISE_TYPE_CALISTHENICS)
-
-              private fun filterAndDeduplicateSteps(steps: List<StepsRecord>, workouts: List<UnifiedWorkout>, logs: MutableList<String>, recordLogs: Boolean): Long {
-                  val prioritized = steps.sortedWith(compareByDescending<StepsRecord> { classifySource(it.metadata.dataOrigin.packageName).cardioPriority }.thenBy { it.startTime })
+              private fun filterSteps(steps: List<StepsRecord>, workouts: List<UnifiedWorkout>): Long {
+                  val sorted = steps.sortedBy { it.startTime }
                   val accepted = mutableListOf<StepsRecord>()
-                  var skippedDup = 0L; var skippedGhost = 0L
-                  for (rec in prioritized) {
-                      val durMin = Duration.between(rec.startTime, rec.endTime).toMinutes().coerceAtLeast(1L)
-                      if (rec.count / durMin > 260L || workouts.any { w -> w.isNonStepActivity && overlapRatio(w.startTime, w.endTime, rec.startTime, rec.endTime) >= 0.70 }) { skippedGhost += rec.count; continue }
-                      if (accepted.any { ex -> overlapRatio(ex.startTime, ex.endTime, rec.startTime, rec.endTime) >= 0.50 }) { skippedDup += rec.count; continue }
-                      accepted.add(rec)
+                  for (r in sorted) {
+                      val dur = Duration.between(r.startTime, r.endTime).toMinutes().coerceAtLeast(1L)
+                      if (r.count / dur > 260L || workouts.any { it.isNonStepActivity && overlap(it.startTime, it.endTime, r.startTime, r.endTime) >= 0.70 }) continue
+                      if (accepted.any { overlap(it.startTime, it.endTime, r.startTime, r.endTime) >= 0.50 }) continue
+                      accepted.add(r)
                   }
-                  if (recordLogs && skippedDup > 0L) logs.add("Garmin bevorzugt: $skippedDup doppelte Schritte ignoriert.")
-                  if (recordLogs && skippedGhost > 0L) logs.add("Geister-Schritte bereinigt: $skippedGhost Schritte während Zwift/Kraft entfernt.")
                   return accepted.sumOf { it.count }
               }
 
-              private fun deduplicateCalories(calRecords: List<ActiveCaloriesBurnedRecord>, workouts: List<UnifiedWorkout>, logs: MutableList<String>): Int {
-                  val prioritized = calRecords.sortedWith(compareByDescending<ActiveCaloriesBurnedRecord> { classifySource(it.metadata.dataOrigin.packageName).cardioPriority }.thenBy { it.startTime })
+              private fun deduplicateCalories(cals: List<ActiveCaloriesBurnedRecord>, workouts: List<UnifiedWorkout>): Int {
                   val accepted = mutableListOf<ActiveCaloriesBurnedRecord>()
-                  var skipped = 0
-                  for (rec in prioritized) {
-                      val kcal = rec.energy.inKilocalories.roundToInt()
-                      if (kcal <= 0 || kcal > 3000) continue
-                      if (accepted.any { ex -> overlapRatio(ex.startTime, ex.endTime, rec.startTime, rec.endTime) >= 0.50 }) { skipped += kcal; continue }
-                      accepted.add(rec)
+                  for (r in cals.sortedBy { it.startTime }) {
+                      val k = r.energy.inKilocalories.roundToInt()
+                      if (k !in 1..3000) continue
+                      if (accepted.any { overlap(it.startTime, it.endTime, r.startTime, r.endTime) >= 0.50 }) continue
+                      accepted.add(r)
                   }
-                  if (skipped > 0) logs.add("Doppelte Kalorien verhindert: $skipped kcal verworfen.")
                   return maxOf(accepted.sumOf { it.energy.inKilocalories.roundToInt() }, workouts.sumOf { it.activeKcal })
               }
 
-              private fun calculateWhoopRecovery(rhr: Int?, hrv: Double?, sleepPerf: Int?, todayWorkouts: List<UnifiedWorkout>): Int {
+              private fun computeRecovery(rhr: Int?, hrv: Double?, sleepPerf: Int?, todayWorkouts: List<UnifiedWorkout>): Int {
                   var rec = 62.0
                   if (hrv != null) rec += ((hrv - 42.0) * 0.45).coerceIn(-20.0, 20.0)
-                  if (rhr != null) rec += ((62 - rhr) * 0.9).coerceIn(-18.0, 15.0)
+                  if (rhr != null) rec += ((61 - rhr) * 0.9).coerceIn(-18.0, 15.0)
                   if (sleepPerf != null) rec += ((sleepPerf - 80) * 0.35).coerceIn(-15.0, 10.0)
                   if (todayWorkouts.sumOf { it.durationMinutes } > 90) rec -= 6.0
                   return rec.roundToInt().coerceIn(12, 98)
               }
 
-              private fun calculateDayStrain(todayWorkouts: List<UnifiedWorkout>, steps: Long, isToday: Boolean): Double {
-                  val wStrain = todayWorkouts.sumOf { it.strainScore }
-                  val stepStrain = if (isToday) (steps / 4000.0).coerceAtMost(4.5) else 2.0
-                  return ((wStrain * 0.85 + stepStrain).coerceIn(0.5, 20.8) * 10.0).roundToInt() / 10.0
+              private fun computeStrain(todayWorkouts: List<UnifiedWorkout>, steps: Long, isToday: Boolean): Double {
+                  val w = todayWorkouts.sumOf { it.strainScore }
+                  val s = if (isToday) (steps / 4000.0).coerceAtMost(4.5) else 2.0
+                  return ((w * 0.85 + s).coerceIn(0.5, 20.8) * 10.0).roundToInt() / 10.0
               }
 
-              private fun overlapRatio(s1: Instant, e1: Instant, s2: Instant, e2: Instant): Double {
-                  val overlapSec = Duration.between(maxOf(s1, s2), minOf(e1, e2)).seconds
-                  if (overlapSec <= 0L) return 0.0
-                  return overlapSec.toDouble() / min(Duration.between(s1, e1).seconds.coerceAtLeast(1L), Duration.between(s2, e2).seconds.coerceAtLeast(1L)).toDouble()
+              private fun downsample(vals: List<Int>, n: Int): List<Int> =
+                  if (vals.size <= n) vals else (0 until n).map { vals[(it * (vals.size.toDouble() / n)).toInt().coerceIn(0, vals.lastIndex)] }
+
+              private fun computeZones(vals: List<Int>, totalMin: Int, maxHr: Int): List<Int> {
+                  if (vals.isEmpty()) return emptyList()
+                  val c = IntArray(5)
+                  for (b in vals) {
+                      val p = b.toDouble() / maxHr
+                      when { p < 0.60 -> c[0]++; p < 0.70 -> c[1]++; p < 0.80 -> c[2]++; p < 0.90 -> c[3]++; else -> c[4]++ }
+                  }
+                  return c.map { ((it.toDouble() / vals.size) * totalMin).roundToInt() }
               }
 
-              private fun resolveWorkoutTitle(primary: ExerciseSessionRecord, secondary: ExerciseSessionRecord?, primarySrc: DataSource, secondarySrc: DataSource?, isStrength: Boolean): String {
-                  val zwiftTitle = when {
-                      secondarySrc == DataSource.ZWIFT && !secondary?.title.isNullOrBlank() -> secondary?.title
-                      primarySrc == DataSource.ZWIFT && !primary.title.isNullOrBlank() -> primary.title
-                      else -> null
+              private fun buildSeries(days: Int, zone: ZoneId, fn: (Instant, Instant) -> Float?): List<Pair<String, Float>> {
+                  val fmt = DateTimeFormatter.ofPattern("dd.MM")
+                  val today = LocalDate.now()
+                  return (days - 1 downTo 0).map { off ->
+                      val d = today.minusDays(off.toLong())
+                      d.format(fmt) to (fn(d.atStartOfDay(zone).toInstant(), d.plusDays(1).atStartOfDay(zone).toInstant()) ?: 0f)
                   }
-                  if (zwiftTitle != null) return zwiftTitle
-                  val custom = listOfNotNull(primary.title, secondary?.title).firstOrNull { it.isNotBlank() }
-                  if (custom != null) return custom
-                  if (isStrength) return "Krafttraining (Speediance)"
-                  if (primarySrc == DataSource.ZWIFT || secondarySrc == DataSource.ZWIFT) return "Zwift Indoor-Cycling"
-                  return when (primary.exerciseType) {
-                      ExerciseSessionRecord.EXERCISE_TYPE_BIKING, ExerciseSessionRecord.EXERCISE_TYPE_BIKING_STATIONARY -> "Radfahren / Indoor-Cycling"
-                      ExerciseSessionRecord.EXERCISE_TYPE_RUNNING, ExerciseSessionRecord.EXERCISE_TYPE_RUNNING_TREADMILL -> "Laufen / Laufband"
-                      ExerciseSessionRecord.EXERCISE_TYPE_WALKING -> "Gehen"
-                      else -> "Ausdauer-Training"
-                  }
+              }
+
+              private fun overlap(s1: Instant, e1: Instant, s2: Instant, e2: Instant): Double {
+                  val sec = Duration.between(maxOf(s1, s2), minOf(e1, e2)).seconds
+                  if (sec <= 0L) return 0.0
+                  return sec.toDouble() / min(Duration.between(s1, e1).seconds.coerceAtLeast(1L), Duration.between(s2, e2).seconds.coerceAtLeast(1L)).toDouble()
               }
           }
           EOF
-
-                    cat << 'EOF' > app/src/main/java/de/fold8/healthcoach/CustomCharts.kt
+          
+                    cat << 'EOF' > app/src/main/java/de/fold8/healthcoach/ComposeCharts.kt
           package de.fold8.healthcoach
 
-          import android.content.Context
-          import android.graphics.*
-          import android.view.View
+          import androidx.compose.foundation.Canvas
+          import androidx.compose.foundation.layout.*
+          import androidx.compose.material3.Text
+          import androidx.compose.runtime.Composable
+          import androidx.compose.ui.Alignment
+          import androidx.compose.ui.Modifier
+          import androidx.compose.ui.geometry.CornerRadius
+          import androidx.compose.ui.geometry.Offset
+          import androidx.compose.ui.geometry.Size
+          import androidx.compose.ui.graphics.*
+          import androidx.compose.ui.graphics.drawscope.Stroke
+          import androidx.compose.ui.text.font.FontWeight
+          import androidx.compose.ui.unit.dp
+          import androidx.compose.ui.unit.sp
 
-          class WhoopRingView(
-              context: Context,
-              private val title: String,
-              private val valueText: String,
-              private val progress: Float,
-              private val ringColor: Int
-          ) : View(context) {
-
-              private val trackPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                  style = Paint.Style.STROKE
-                  color = Color.parseColor("#1E2633")
-                  strokeCap = Paint.Cap.ROUND
-              }
-              private val arcPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                  style = Paint.Style.STROKE
-                  color = ringColor
-                  strokeCap = Paint.Cap.ROUND
-              }
-              private val valPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                  color = Color.WHITE
-                  textAlign = Paint.Align.CENTER
-                  typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-              }
-              private val lblPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                  color = Color.parseColor("#8B949E")
-                  textAlign = Paint.Align.CENTER
-                  typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-              }
-
-              override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-                  val w = MeasureSpec.getSize(widthMeasureSpec).coerceAtLeast(180)
-                  setMeasuredDimension(w, (w * 0.96f).toInt())
-              }
-
-              override fun onDraw(canvas: Canvas) {
-                  super.onDraw(canvas)
-                  val w = width.toFloat()
-                  val h = height.toFloat()
-                  val stroke = (w * 0.085f).coerceIn(10f, 22f)
-                  trackPaint.strokeWidth = stroke
-                  arcPaint.strokeWidth = stroke
-
-                  val radius = (minOf(w, h * 0.78f) / 2f) - stroke
-                  val cx = w / 2f
-                  val cy = radius + stroke + 6f
-                  val rect = RectF(cx - radius, cy - radius, cx + radius, cy + radius)
-
-                  canvas.drawArc(rect, 135f, 270f, false, trackPaint)
-                  canvas.drawArc(rect, 135f, 270f * progress.coerceIn(0.03f, 1f), false, arcPaint)
-
-                  valPaint.textSize = (radius * 0.56f).coerceIn(24f, 48f)
-                  canvas.drawText(valueText, cx, cy + valPaint.textSize * 0.35f, valPaint)
-
-                  lblPaint.textSize = (radius * 0.25f).coerceIn(14f, 24f)
-                  canvas.drawText(title.uppercase(), cx, h - 8f, lblPaint)
-              }
-          }
-
-          class HeartRateChartView(
-              context: Context,
-              private val curve: List<Int>,
-              private val compact: Boolean = false
-          ) : View(context) {
-
-              private val linePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                  style = Paint.Style.STROKE
-                  color = Color.parseColor("#FF453A")
-                  strokeWidth = if (compact) 4f else 6f
-                  strokeCap = Paint.Cap.ROUND
-                  strokeJoin = Paint.Join.ROUND
-              }
-              private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
-              private val gridPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                  color = Color.parseColor("#212834")
-                  strokeWidth = 2f
-              }
-              private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                  color = Color.parseColor("#8B949E")
-                  textSize = 24f
-              }
-
-              override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-                  val w = MeasureSpec.getSize(widthMeasureSpec).coerceAtLeast(240)
-                  setMeasuredDimension(w, if (compact) 110 else 360)
-              }
-
-              override fun onDraw(canvas: Canvas) {
-                  super.onDraw(canvas)
-                  val w = width.toFloat()
-                  val h = height.toFloat()
-                  if (curve.size < 2) {
-                      if (!compact) canvas.drawText("Keine detaillierte Pulskurve gespeichert", 24f, h / 2f, textPaint)
-                      return
-                  }
-
-                  val padLeft = if (compact) 8f else 68f
-                  val padRight = 16f
-                  val padTop = if (compact) 10f else 28f
-                  val padBottom = if (compact) 10f else 42f
-                  val chartW = (w - padLeft - padRight).coerceAtLeast(10f)
-                  val chartH = (h - padTop - padBottom).coerceAtLeast(10f)
-
-                  val minHr = (curve.min() - 8).coerceAtLeast(50)
-                  val maxHr = (curve.max() + 8).coerceAtMost(215)
-                  val span = (maxHr - minHr).coerceAtLeast(15).toFloat()
-
-                  if (!compact) {
-                      for (step in 0..2) {
-                          val y = padTop + chartH * (step / 2f)
-                          val bpmLabel = (maxHr - (span * (step / 2f))).toInt()
-                          canvas.drawLine(padLeft, y, w - padRight, y, gridPaint)
-                          canvas.drawText("$bpmLabel", 6f, y + 8f, textPaint)
+          @Composable
+          fun WhoopGaugeRing(
+              label: String,
+              valueText: String,
+              progress: Float,
+              accentColor: Color,
+              modifier: Modifier = Modifier
+          ) {
+              Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+                  Box(contentAlignment = Alignment.Center, modifier = Modifier.size(96.dp)) {
+                      Canvas(modifier = Modifier.fillMaxSize().padding(6.dp)) {
+                          val strokeWidth = 10.dp.toPx()
+                          val stroke = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                          drawArc(
+                              color = Color(0xFF1C2432),
+                              startAngle = 135f,
+                              sweepAngle = 270f,
+                              useCenter = false,
+                              style = stroke
+                          )
+                          drawArc(
+                              color = accentColor,
+                              startAngle = 135f,
+                              sweepAngle = 270f * progress.coerceIn(0.03f, 1f),
+                              useCenter = false,
+                              style = stroke
+                          )
                       }
+                      Text(
+                          text = valueText,
+                          color = Color.White,
+                          fontSize = 18.sp,
+                          fontWeight = FontWeight.Bold
+                      )
                   }
-
-                  val path = Path()
-                  val fillPath = Path()
-                  curve.forEachIndexed { idx, bpm ->
-                      val x = padLeft + chartW * (idx.toFloat() / (curve.size - 1))
-                      val normY = ((bpm - minHr) / span).coerceIn(0f, 1f)
-                      val y = padTop + chartH * (1f - normY)
-                      if (idx == 0) {
-                          path.moveTo(x, y)
-                          fillPath.moveTo(x, padTop + chartH)
-                          fillPath.lineTo(x, y)
-                      } else {
-                          path.lineTo(x, y)
-                          fillPath.lineTo(x, y)
-                      }
-                  }
-                  fillPath.lineTo(padLeft + chartW, padTop + chartH)
-                  fillPath.close()
-
-                  fillPaint.shader = LinearGradient(
-                      0f, padTop, 0f, padTop + chartH,
-                      Color.argb(95, 255, 69, 58), Color.TRANSPARENT, Shader.TileMode.CLAMP
+                  Spacer(Modifier.height(4.dp))
+                  Text(
+                      text = label.uppercase(),
+                      color = Color(0xFF8B949E),
+                      fontSize = 10.sp,
+                      fontWeight = FontWeight.SemiBold,
+                      letterSpacing = 0.8.sp
                   )
-                  canvas.drawPath(fillPath, fillPaint)
-                  canvas.drawPath(path, linePaint)
               }
           }
 
-          class SleepStagesBarView(
-              context: Context,
-              private val sleep: SleepDetail
-          ) : View(context) {
-
-              private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-
-              override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-                  val w = MeasureSpec.getSize(widthMeasureSpec).coerceAtLeast(240)
-                  setMeasuredDimension(w, 54)
+          @Composable
+          fun SmoothAreaChart(
+              values: List<Float>,
+              lineColor: Color,
+              modifier: Modifier = Modifier.fillMaxWidth().height(90.dp)
+          ) {
+              val clean = values.filter { it > 0f }
+              if (clean.size < 2) {
+                  Box(modifier = modifier, contentAlignment = Alignment.CenterStart) {
+                      Text("Verlauf sammelt sich mit den nächsten Messungen", color = Color(0xFF6E7681), fontSize = 12.sp)
+                  }
+                  return
               }
+              Canvas(modifier = modifier) {
+                  val minV = (clean.min() * 0.94f)
+                  val maxV = (clean.max() * 1.04f)
+                  val span = (maxV - minV).coerceAtLeast(1f)
+                  val padV = 8.dp.toPx()
+                  val h = size.height - padV * 2
+                  val w = size.width
 
-              override fun onDraw(canvas: Canvas) {
-                  super.onDraw(canvas)
-                  val w = width.toFloat()
-                  val h = height.toFloat()
+                  val pts = clean.mapIndexed { idx, v ->
+                      val x = w * (idx.toFloat() / (clean.size - 1))
+                      val y = padV + h * (1f - ((v - minV) / span).coerceIn(0f, 1f))
+                      Offset(x, y)
+                  }
+
+                  val linePath = Path().apply {
+                      moveTo(pts.first().x, pts.first().y)
+                      for (i in 0 until pts.size - 1) {
+                          val midX = (pts[i].x + pts[i + 1].x) / 2f
+                          cubicTo(midX, pts[i].y, midX, pts[i + 1].y, pts[i + 1].x, pts[i + 1].y)
+                      }
+                  }
+
+                  val fillPath = Path().apply {
+                      addPath(linePath)
+                      lineTo(pts.last().x, size.height)
+                      lineTo(pts.first().x, size.height)
+                      close()
+                  }
+
+                  drawPath(
+                      path = fillPath,
+                      brush = Brush.verticalGradient(
+                          colors = listOf(lineColor.copy(alpha = 0.35f), Color.Transparent)
+                      )
+                  )
+                  drawPath(
+                      path = linePath,
+                      color = lineColor,
+                      style = Stroke(width = 2.6.dp.toPx(), cap = StrokeCap.Round)
+                  )
+              }
+          }
+
+          @Composable
+          fun SleepHypnogramBar(sleep: SleepDetail, modifier: Modifier = Modifier.fillMaxWidth().height(22.dp)) {
+              Canvas(modifier = modifier) {
                   val total = (sleep.deepMinutes + sleep.remMinutes + sleep.lightMinutes + sleep.awakeMinutes).coerceAtLeast(1L).toFloat()
-
-                  val segments = listOf(
-                      sleep.deepMinutes to Color.parseColor("#5E5CE6"),
-                      sleep.remMinutes to Color.parseColor("#BF5AF2"),
-                      sleep.lightMinutes to Color.parseColor("#32D7FF"),
-                      sleep.awakeMinutes to Color.parseColor("#FF9F0A")
+                  val parts = listOf(
+                      sleep.deepMinutes to Color(0xFF6E56CF),
+                      sleep.remMinutes to Color(0xFFE5484D),
+                      sleep.lightMinutes to Color(0xFF00B0FF),
+                      sleep.awakeMinutes to Color(0xFFFFB020)
                   )
-
                   var curX = 0f
-                  for ((mins, col) in segments) {
+                  val gap = 3.dp.toPx()
+                  for ((mins, col) in parts) {
                       if (mins <= 0L) continue
-                      val segW = (mins / total) * w
-                      paint.color = col
-                      canvas.drawRoundRect(curX, 4f, (curX + segW - 4f).coerceAtLeast(curX + 2f), h - 4f, 14f, 14f, paint)
-                      curX += segW
-                  }
-              }
-          }
-
-          class MiniBarChartView(
-              context: Context,
-              private val data: List<Pair<String, Float>>,
-              private val barColor: Int
-          ) : View(context) {
-
-              private val barPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = barColor }
-              private val txtPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                  color = Color.parseColor("#8B949E")
-                  textAlign = Paint.Align.CENTER
-                  textSize = 22f
-              }
-
-              override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-                  val w = MeasureSpec.getSize(widthMeasureSpec).coerceAtLeast(240)
-                  setMeasuredDimension(w, 210)
-              }
-
-              override fun onDraw(canvas: Canvas) {
-                  super.onDraw(canvas)
-                  if (data.isEmpty()) return
-                  val w = width.toFloat()
-                  val h = height.toFloat()
-                  val maxVal = (data.maxOfOrNull { it.second } ?: 1f).coerceAtLeast(1f)
-                  val slotW = w / data.size
-
-                  data.forEachIndexed { i, (label, v) ->
-                      val cx = slotW * i + slotW / 2f
-                      val barW = (slotW * 0.45f).coerceIn(14f, 44f)
-                      val barH = ((v / maxVal) * (h - 75f)).coerceAtLeast(if (v > 0f) 12f else 4f)
-                      val top = h - 38f - barH
-                      barPaint.color = if (v > 0f) barColor else Color.parseColor("#1E2633")
-                      canvas.drawRoundRect(cx - barW / 2f, top, cx + barW / 2f, h - 38f, 10f, 10f, barPaint)
-                      if (v > 0f) canvas.drawText("${v.toInt()}", cx, top - 8f, txtPaint)
-                      canvas.drawText(label, cx, h - 8f, txtPaint)
+                      val segW = ((mins / total) * size.width - gap).coerceAtLeast(4.dp.toPx())
+                      drawRoundRect(
+                          color = col,
+                          topLeft = Offset(curX, 0f),
+                          size = Size(segW, size.height),
+                          cornerRadius = CornerRadius(6.dp.toPx(), 6.dp.toPx())
+                      )
+                      curX += segW + gap
                   }
               }
           }
           EOF
 
-                    cat << 'EOF' > app/src/main/java/de/fold8/healthcoach/GeminiCoachClient.kt
+                    cat << 'EOF' > app/src/main/java/de/fold8/healthcoach/FoldHealthScreen.kt
           package de.fold8.healthcoach
 
-          import kotlinx.coroutines.Dispatchers
-          import kotlinx.coroutines.withContext
-          import org.json.JSONArray
-          import org.json.JSONObject
-          import java.net.HttpURLConnection
-          import java.net.URL
+          import androidx.compose.foundation.BorderStroke
+          import androidx.compose.foundation.background
+          import androidx.compose.foundation.clickable
+          import androidx.compose.foundation.layout.*
+          import androidx.compose.foundation.rememberScrollState
+          import androidx.compose.foundation.shape.CircleShape
+          import androidx.compose.foundation.shape.RoundedCornerShape
+          import androidx.compose.foundation.verticalScroll
+          import androidx.compose.material3.*
+          import androidx.compose.runtime.*
+          import androidx.compose.ui.Alignment
+          import androidx.compose.ui.Modifier
+          import androidx.compose.ui.draw.clip
+          import androidx.compose.ui.graphics.Color
+          import androidx.compose.ui.platform.LocalConfiguration
+          import androidx.compose.ui.text.font.FontWeight
+          import androidx.compose.ui.text.input.PasswordVisualTransformation
+          import androidx.compose.ui.unit.dp
+          import androidx.compose.ui.unit.sp
 
-          class GeminiCoachClient {
+          val BgObsidian = Color(0xFF05070A)
+          val CardGlass = Color(0xFF10151E)
+          val CardBorder = Color(0xFF1E293B)
+          val NeonEmerald = Color(0xFF00E676)
+          val NeonCyan = Color(0xFF00B0FF)
+          val HealthCoral = Color(0xFFFF375F)
+          val WithingsTeal = Color(0xFF2DD4BF)
+          val ZwiftOrange = Color(0xFFFF6D00)
+          val MutedGray = Color(0xFF8B949E)
 
-              suspend fun generateInsight(apiKey: String, report: HealthReport): String =
-                  withContext(Dispatchers.IO) {
-                      if (apiKey.isBlank()) return@withContext buildLocalCoachFallback(report)
-                      val fp = report.fitnessProfile
-                      val muscleText = report.periodMuscleSets.entries.joinToString(", ") { "${it.key.label}: ${it.value}×" }
-                      val recentWorkouts = report.filteredWorkouts.takeLast(6).joinToString("; ") { w ->
-                          "${w.dateLabel} ${w.title}: ${w.durationMinutes} Min, Ø Puls ${w.avgHeartRate ?: "-"} bpm, Strain ${w.strainScore}"
-                      }.ifBlank { "Keine Trainings." }
+          @Composable
+          fun FoldHealthApp(
+              report: HealthReport?,
+              statusText: String,
+              selectedRange: TimeRangeOption,
+              savedAge: Int,
+              savedIcuKey: String,
+              onSelectRange: (TimeRangeOption) -> Unit,
+              onRequestPermissions: () -> Unit,
+              onSyncWithSettings: (Int, String) -> Unit,
+              onSaveMuscles: (String, Set<MuscleGroup>) -> Unit
+          ) {
+              val isUnfoldedInner = LocalConfiguration.current.screenWidthDp >= 600
+              var activeTab by remember { mutableIntStateOf(0) }
+              var selectedWorkoutForDetail by remember { mutableStateOf<UnifiedWorkout?>(null) }
 
-                      val prompt = "Du bist ein sportwissenschaftlicher KI-Coach (Whoop/Apple Health Stil). " +
-                          "Alter: ${fp.chronologicalAge} J., Fitnessalter: ${fp.fitnessAge} J. (${fp.fitnessLevelLabel}), " +
-                          "Erholung: ${report.recoveryPercent}%, Tages-Strain: ${report.dayStrain}/21, " +
-                          "Ruhepuls: ${report.latestRestingHr ?: "-"} bpm, HRV: ${report.latestHrvMs?.toInt() ?: "-"} ms, " +
-                          "Schlaf: ${report.sleepDetail?.let { "${it.totalMinutes / 60}h ${it.totalMinutes % 60}m (Tief ${it.deepMinutes}m, REM ${it.remMinutes}m)" } ?: "-"}, " +
-                          "Trainings: $recentWorkouts, Muskelgruppen: $muscleText. " +
-                          "Antworte auf Deutsch in 3 kurzen, klaren Punkten: 1. Erholung & Herz-Kreislauf, 2. Training & Muskel-Balance, 3. Empfehlung für heute."
-
-                      try {
-                          val endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey.trim()}"
-                          val conn = (URL(endpoint).openConnection() as HttpURLConnection).apply {
-                              requestMethod = "POST"
-                              setRequestProperty("Content-Type", "application/json; charset=UTF-8")
-                              doOutput = true; connectTimeout = 15000; readTimeout = 20000
+              Scaffold(
+                  containerColor = BgObsidian,
+                  topBar = {
+                      Column(
+                          modifier = Modifier
+                              .fillMaxWidth()
+                              .background(BgObsidian)
+                              .statusBarsPadding()
+                              .padding(horizontal = 20.dp, vertical = 14.dp)
+                      ) {
+                          Row(verticalAlignment = Alignment.CenterVertically) {
+                              Column(modifier = Modifier.weight(1f)) {
+                                  Text(
+                                      text = if (isUnfoldedInner) "Fold Health Coach • Dual View" else "Fold Health Coach",
+                                      color = Color.White,
+                                      fontSize = 21.sp,
+                                      fontWeight = FontWeight.Bold
+                                  )
+                                  Text(text = statusText, color = MutedGray, fontSize = 12.sp)
+                              }
+                              Surface(
+                                  shape = CircleShape,
+                                  color = Color(0xFF132238),
+                                  border = BorderStroke(1.dp, NeonCyan.copy(alpha = 0.5f)),
+                                  modifier = Modifier.clickable { onSyncWithSettings(savedAge, savedIcuKey) }
+                              ) {
+                                  Text(
+                                      text = "↻ Sync",
+                                      color = NeonCyan,
+                                      fontSize = 13.sp,
+                                      fontWeight = FontWeight.SemiBold,
+                                      modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                                  )
+                              }
                           }
-                          val payload = JSONObject().put("contents", JSONArray().put(JSONObject().put("parts", JSONArray().put(JSONObject().put("text", prompt)))))
-                          conn.outputStream.use { it.write(payload.toString().toByteArray(Charsets.UTF_8)) }
-                          if (conn.responseCode !in 200..299) return@withContext buildLocalCoachFallback(report)
-                          val resp = conn.inputStream.bufferedReader().use { it.readText() }
-                          JSONObject(resp).getJSONArray("candidates").getJSONObject(0).getJSONObject("content").getJSONArray("parts").getJSONObject(0).getString("text").trim()
-                      } catch (_: Exception) { buildLocalCoachFallback(report) }
+                          if (isUnfoldedInner) {
+                              Spacer(Modifier.height(12.dp))
+                              GlassTabRow(activeTab = activeTab, onSelect = { activeTab = it })
+                          }
+                      }
+                  },
+                  bottomBar = {
+                      if (!isUnfoldedInner) {
+                          Box(
+                              modifier = Modifier
+                                  .fillMaxWidth()
+                                  .navigationBarsPadding()
+                                  .padding(horizontal = 16.dp, vertical = 10.dp)
+                          ) {
+                              GlassTabRow(activeTab = activeTab, onSelect = { activeTab = it })
+                          }
+                      }
                   }
+              ) { innerPadding ->
+                  if (report == null) {
+                      Box(
+                          modifier = Modifier.fillMaxSize().padding(innerPadding).padding(24.dp),
+                          contentAlignment = Alignment.Center
+                      ) {
+                          BentoCard {
+                              Text("WILLKOMMEN BEIM FOLD HEALTH COACH", color = NeonCyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                              Spacer(Modifier.height(8.dp))
+                              Text("Verbinde Health Connect für Fitbit Air, Withings & Speediance oder hinterlege deinen Intervals.icu Key für Garmin & Zwift.", color = Color.White, fontSize = 14.sp)
+                              Spacer(Modifier.height(16.dp))
+                              Button(onClick = onRequestPermissions, colors = ButtonDefaults.buttonColors(containerColor = NeonCyan)) {
+                                  Text("Health Connect Rechte aktivieren", color = Color.Black, fontWeight = FontWeight.Bold)
+                              }
+                          }
+                      }
+                  } else {
+                      val scrollState = rememberScrollState()
+                      Column(
+                          modifier = Modifier
+                              .fillMaxSize()
+                              .padding(innerPadding)
+                              .verticalScroll(scrollState)
+                              .padding(horizontal = 16.dp, vertical = 8.dp)
+                      ) {
+                          when (activeTab) {
+                              0 -> OverviewPage(report, isUnfoldedInner)
+                              1 -> SleepAndVitalsPage(report, isUnfoldedInner)
+                              2 -> FitnessPage(report, isUnfoldedInner, selectedRange, onSelectRange) { selectedWorkoutForDetail = it }
+                              3 -> BodyAndSettingsPage(report, isUnfoldedInner, savedAge, savedIcuKey, onRequestPermissions, onSyncWithSettings)
+                          }
+                          Spacer(Modifier.height(24.dp))
+                      }
+                  }
+              }
 
-              private fun buildLocalCoachFallback(report: HealthReport): String {
-                  val fp = report.fitnessProfile
-                  val openMuscles = report.periodMuscleSets.filterValues { it == 0 }.keys.joinToString(", ") { it.label }
-                  return buildString {
-                      appendLine("• Erholung ${report.recoveryPercent}% • Strain ${report.dayStrain}/21 • Fitnessalter ${fp.fitnessAge} J.")
-                      appendLine(if (openMuscles.isBlank()) "• Muskel-Balance: Alle 6 Gruppen abgedeckt." else "• Muskel-Fokus offen: $openMuscles.")
-                      append(when {
-                          report.recoveryPercent >= 70 -> "• Empfehlung: Hohe Bereitschaft – ideal für Speediance-Kraft oder Intervalle."
-                          report.recoveryPercent >= 45 -> "• Empfehlung: Moderate Belastung (Zone-2-Cardio oder Technik-Kraft)."
-                          else -> "• Empfehlung: Niedrige Erholung – Fokus auf Schlaf, Elektrolyte und Regeneration."
-                      })
+              selectedWorkoutForDetail?.let { workout ->
+                  WorkoutDetailSheet(
+                      workout = workout,
+                      onDismiss = { selectedWorkoutForDetail = null },
+                      onSaveMuscles = { updatedSet ->
+                          onSaveMuscles(workout.id, updatedSet)
+                          selectedWorkoutForDetail = null
+                      }
+                  )
+              }
+          }
+
+          @Composable
+          fun GlassTabRow(activeTab: Int, onSelect: (Int) -> Unit) {
+              val tabs = listOf("Heute", "Schlaf & Puls", "Fitness", "Körper & Setup")
+              Surface(
+                  shape = RoundedCornerShape(50),
+                  color = Color(0xFF0E131B),
+                  border = BorderStroke(1.dp, CardBorder),
+                  modifier = Modifier.fillMaxWidth()
+              ) {
+                  Row(modifier = Modifier.padding(4.dp)) {
+                      tabs.forEachIndexed { idx, title ->
+                          val selected = idx == activeTab
+                          Box(
+                              contentAlignment = Alignment.Center,
+                              modifier = Modifier
+                                  .weight(1f)
+                                  .clip(RoundedCornerShape(50))
+                                  .background(if (selected) Color(0xFF1D293D) else Color.Transparent)
+                                  .clickable { onSelect(idx) }
+                                  .padding(vertical = 10.dp)
+                          ) {
+                              Text(
+                                  text = title,
+                                  color = if (selected) Color.White else MutedGray,
+                                  fontSize = 12.sp,
+                                  fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+                              )
+                          }
+                      }
                   }
+              }
+          }
+
+          @Composable
+          fun OverviewPage(rep: HealthReport, isInner: Boolean) {
+              val leftContent: @Composable ColumnScope.() -> Unit = {
+                  BentoCard {
+                      Text("TODAY'S PERFORMANCE • WHOOP INDEX", color = MutedGray, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp)
+                      Spacer(Modifier.height(14.dp))
+                      Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                          val recColor = when {
+                              rep.recoveryPercent >= 67 -> NeonEmerald
+                              rep.recoveryPercent >= 34 -> Color(0xFFFFB020)
+                              else -> HealthCoral
+                          }
+                          WhoopGaugeRing("Erholung", "${rep.recoveryPercent}%", rep.recoveryPercent / 100f, recColor)
+                          WhoopGaugeRing("Belastung", "${rep.dayStrain}", (rep.dayStrain / 21.0).toFloat(), NeonCyan)
+                          val sp = rep.sleepDetail?.performancePercent ?: 0
+                          WhoopGaugeRing("Schlaf", if (sp > 0) "$sp%" else "-", sp / 100f, Color(0xFF7C5CFF))
+                      }
+                  }
+                  Spacer(Modifier.height(14.dp))
+                  FitnessAgeCard(rep.fitnessProfile)
+              }
+
+              val rightContent: @Composable ColumnScope.() -> Unit = {
+                  Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                      MiniVitalCard("RUHEPULS", rep.latestRestingHr?.let { "$it bpm" } ?: "-", rep.restingHrSource, HealthCoral, Modifier.weight(1f))
+                      MiniVitalCard("HRV (RMSSD)", rep.latestHrvMs?.let { "${it.toInt()} ms" } ?: "-", rep.hrvSource, NeonEmerald, Modifier.weight(1f))
+                  }
+                  Spacer(Modifier.height(12.dp))
+                  Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                      MiniVitalCard("HAUTTEMP.", rep.skinTempDeltaC?.let { "${if (it >= 0) "+" else ""}$it °C" } ?: "-", "Fitbit Air Nacht", Color(0xFFFFB020), Modifier.weight(1f))
+                      MiniVitalCard("GEWICHT / FETT", rep.bodyComp.weightKg?.let { "${it} kg" } ?: "-", rep.bodyComp.bodyFatPercent?.let { "$it% Körperfett" } ?: "Withings", WithingsTeal, Modifier.weight(1f))
+                  }
+                  Spacer(Modifier.height(14.dp))
+                  DeviceCompareCard(rep.deviceComparison)
+              }
+
+              if (isInner) {
+                  // Aufgeklapptes Fold 8 Innendisplay: 50/50 Split links und rechts der Scharnier-Falz
+                  Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(22.dp)) {
+                      Column(modifier = Modifier.weight(1f), content = leftContent)
+                      Column(modifier = Modifier.weight(1f), content = rightContent)
+                  }
+              } else {
+                  leftContent()
+                  Spacer(Modifier.height(14.dp))
+                  rightContent()
+              }
+          }
+
+          @Composable
+          fun FitnessAgeCard(fp: FitnessProfile) {
+              val isYounger = fp.netDeltaYears <= 0.0
+              val accent = if (isYounger) NeonEmerald else Color(0xFFFFB020)
+              BentoCard(borderColor = accent.copy(alpha = 0.45f)) {
+                  Row(verticalAlignment = Alignment.CenterVertically) {
+                      Column(modifier = Modifier.weight(1f)) {
+                          Text("BIOLOGISCHES FITNESSALTER", color = accent, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp)
+                          Spacer(Modifier.height(4.dp))
+                          Text("${fp.fitnessAge} Jahre", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold)
+                          val sign = if (fp.netDeltaYears > 0) "+" else ""
+                          Text("Differenz: ${sign}${fp.netDeltaYears} J. zu ${fp.chronologicalAge} • Level: ${fp.fitnessLevelLabel} (${fp.fitnessScore}/100)", color = MutedGray, fontSize = 12.sp)
+                      }
+                  }
+                  Spacer(Modifier.height(12.dp))
+                  fp.factors.forEach { f ->
+                      Row(modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                          Text("${f.name} (${f.valueDisplay})", color = Color(0xFFC9D1D9), fontSize = 12.sp)
+                          val fSign = if (f.deltaYears > 0) "+" else ""
+                          val fCol = when {
+                              f.deltaYears < 0 -> NeonEmerald
+                              f.deltaYears > 0 -> HealthCoral
+                              else -> MutedGray
+                          }
+                          Text("${fSign}${f.deltaYears} J.", color = fCol, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                      }
+                  }
+              }
+          }
+
+          @Composable
+          fun DeviceCompareCard(cmp: DeviceComparison) {
+              BentoCard {
+                  Text("SENSOR-VERGLEICH: GARMIN VS. FITBIT AIR", color = NeonCyan, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp)
+                  Spacer(Modifier.height(10.dp))
+                  CompareRow("Ruhepuls", cmp.garminRhr?.let { "$it bpm" } ?: "-", cmp.fitbitRhr?.let { "$it bpm" } ?: "-")
+                  CompareRow("HRV (RMSSD)", cmp.garminHrv?.let { "${it.toInt()} ms" } ?: "-", cmp.fitbitHrv?.let { "${it.toInt()} ms" } ?: "-")
+                  CompareRow("Schlaf", cmp.garminSleepMin?.let { "${it / 60}h ${it % 60}m" } ?: "-", cmp.fitbitSleepMin?.let { "${it / 60}h ${it % 60}m" } ?: "-")
+                  CompareRow("Schritte heute", cmp.garminSteps?.toString() ?: "-", cmp.fitbitSteps?.toString() ?: "-")
+              }
+          }
+
+          @Composable
+          fun CompareRow(metric: String, garminVal: String, fitbitVal: String) {
+              Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                  Text(metric, color = MutedGray, fontSize = 12.sp, modifier = Modifier.weight(1.2f))
+                  Text("Garmin: $garminVal", color = NeonEmerald, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                  Text("Fitbit: $fitbitVal", color = Color(0xFFC9D1D9), fontSize = 12.sp, modifier = Modifier.weight(1f))
               }
           }
           EOF
 
-          cat << 'EOF' > app/src/main/java/de/fold8/healthcoach/MainActivity.kt
+                    cat << 'EOF' >> app/src/main/java/de/fold8/healthcoach/FoldHealthScreen.kt
+
+          @Composable
+          fun SleepAndVitalsPage(rep: HealthReport, isInner: Boolean) {
+              val left: @Composable ColumnScope.() -> Unit = {
+                  BentoCard {
+                      Text("SCHLAFANALYSE • ${rep.sleepDetail?.sourceLabel?.uppercase() ?: "KEINE DATEN"}", color = Color(0xFF7C5CFF), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                      Spacer(Modifier.height(6.dp))
+                      val s = rep.sleepDetail
+                      if (s != null) {
+                          Text("${s.totalMinutes / 60} Std. ${s.totalMinutes % 60} Min.", color = Color.White, fontSize = 26.sp, fontWeight = FontWeight.Bold)
+                          Text("Effizienz ${s.efficiencyPercent}% • Performance ${s.performancePercent}%", color = MutedGray, fontSize = 12.sp)
+                          Spacer(Modifier.height(12.dp))
+                          SleepHypnogramBar(s)
+                          Spacer(Modifier.height(12.dp))
+                          Text("🟣 Tief: ${s.deepMinutes}m   🔴 REM: ${s.remMinutes}m   🔵 Leicht: ${s.lightMinutes}m   🟡 Wach: ${s.awakeMinutes}m", color = Color(0xFFC9D1D9), fontSize = 12.sp)
+                      } else {
+                          Text("Keine Schlafdaten im letzten Fenster.", color = MutedGray, fontSize = 13.sp)
+                      }
+                  }
+                  Spacer(Modifier.height(14.dp))
+                  BentoCard {
+                      Text("HAUTTEMPERATUR & ATEMWEGE (FITBIT AIR / GARMIN)", color = Color(0xFFFFB020), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                      Spacer(Modifier.height(8.dp))
+                      Text(
+                          "• Hauttemp.-Abweichung: ${rep.skinTempDeltaC?.let { "${if (it >= 0) "+" else ""}$it °C" } ?: "-"}\n" +
+                          "• Blutsauerstoff (SpO2): ${rep.spo2Percent?.let { "${"%.1f".format(it)} %" } ?: "-"}\n" +
+                          "• Atemfrequenz: ${rep.respRate?.let { "${"%.1f".format(it)} Atemzüge/Min" } ?: "-"}",
+                          color = Color.White, fontSize = 13.sp, lineHeight = 20.sp
+                      )
+                      Spacer(Modifier.height(8.dp))
+                      SmoothAreaChart(rep.skinTempTrend7d.map { it.second + 5f }, Color(0xFFFFB020))
+                  }
+              }
+              val right: @Composable ColumnScope.() -> Unit = {
+                  BentoCard {
+                      Text("RUHEPULS-TREND (7 TAGE) • ${rep.restingHrSource.uppercase()}", color = HealthCoral, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                      Spacer(Modifier.height(6.dp))
+                      Text(rep.latestRestingHr?.let { "$it bpm" } ?: "-", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                      SmoothAreaChart(rep.rhrTrend7d.map { it.second }, HealthCoral)
+                  }
+                  Spacer(Modifier.height(14.dp))
+                  BentoCard {
+                      Text("HRV-TREND (7 TAGE) • ${rep.hrvSource.uppercase()}", color = NeonEmerald, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                      Spacer(Modifier.height(6.dp))
+                      Text(rep.latestHrvMs?.let { "${it.toInt()} ms" } ?: "-", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                      SmoothAreaChart(rep.hrvTrend7d.map { it.second }, NeonEmerald)
+                  }
+              }
+              if (isInner) {
+                  Row(horizontalArrangement = Arrangement.spacedBy(22.dp)) {
+                      Column(Modifier.weight(1f), content = left)
+                      Column(Modifier.weight(1f), content = right)
+                  }
+              } else {
+                  left(); Spacer(Modifier.height(14.dp)); right()
+              }
+          }
+
+          @Composable
+          fun FitnessPage(
+              rep: HealthReport,
+              isInner: Boolean,
+              selectedRange: TimeRangeOption,
+              onSelectRange: (TimeRangeOption) -> Unit,
+              onOpenWorkout: (UnifiedWorkout) -> Unit
+          ) {
+              Row(modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                  TimeRangeOption.values().forEach { opt ->
+                      val sel = opt == selectedRange
+                      Surface(
+                          shape = RoundedCornerShape(50),
+                          color = if (sel) Color(0xFF1D293D) else CardGlass,
+                          border = BorderStroke(1.dp, if (sel) NeonCyan else CardBorder),
+                          modifier = Modifier.weight(1f).clickable { onSelectRange(opt) }
+                      ) {
+                          Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(vertical = 8.dp)) {
+                              Text(opt.label, color = if (sel) Color.White else MutedGray, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                          }
+                      }
+                  }
+              }
+
+              val muscleCard: @Composable () -> Unit = {
+                  BentoCard {
+                      Text("SPEEDIANCE MUSKELGRUPPEN (${rep.selectedRange.label})", color = Color(0xFFFFB020), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                      Spacer(Modifier.height(10.dp))
+                      MuscleGroup.values().forEach { mg ->
+                          val cnt = rep.periodMuscleSets[mg] ?: 0
+                          Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
+                              Text(mg.label, color = Color.White, fontSize = 13.sp, modifier = Modifier.width(86.dp))
+                              LinearProgressIndicator(
+                                  progress = { (cnt / 4f).coerceIn(0f, 1f) },
+                                  color = if (cnt > 0) NeonEmerald else CardBorder,
+                                  trackColor = Color(0xFF1B2330),
+                                  modifier = Modifier.weight(1f).height(8.dp).clip(RoundedCornerShape(4.dp))
+                              )
+                              Spacer(Modifier.width(10.dp))
+                              Text("${cnt}×", color = if (cnt > 0) NeonEmerald else MutedGray, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                          }
+                      }
+                  }
+              }
+
+              val workoutList: @Composable () -> Unit = {
+                  Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                      if (rep.filteredWorkouts.isEmpty()) {
+                          BentoCard { Text("Keine Trainings im Zeitraum (${rep.selectedRange.label}).", color = MutedGray, fontSize = 13.sp) }
+                      }
+                      rep.filteredWorkouts.reversed().forEach { w ->
+                          val badgeCol = if (w.sourceSummary.contains("Zwift", true)) ZwiftOrange else if (w.isStrength) Color(0xFFFFB020) else NeonCyan
+                          BentoCard(modifier = Modifier.clickable { onOpenWorkout(w) }) {
+                              Text("${w.dateLabel} • ${w.sourceSummary.uppercase()} • STRAIN ${w.strainScore}", color = badgeCol, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                              Spacer(Modifier.height(4.dp))
+                              Text("${w.title} (${w.durationMinutes} Min.)", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                              Spacer(Modifier.height(4.dp))
+                              val wattInfo = w.avgWatts?.let { "  |  ⚡ Ø ${it}W" } ?: ""
+                              val distInfo = w.distanceKm?.let { "  |  ${it} km" } ?: ""
+                              Text("♥ Ø ${w.avgHeartRate ?: "-"} / Max ${w.maxHeartRate ?: "-"} bpm  |  🔥 ${w.activeKcal} kcal$wattInfo$distInfo", color = Color(0xFFC9D1D9), fontSize = 12.sp)
+                              if (w.hrCurve.size >= 2) {
+                                  Spacer(Modifier.height(6.dp))
+                                  SmoothAreaChart(w.hrCurve.map { it.toFloat() }, HealthCoral, Modifier.fillMaxWidth().height(54.dp))
+                              }
+                          }
+                      }
+                  }
+              }
+
+              if (isInner) {
+                  Row(horizontalArrangement = Arrangement.spacedBy(22.dp)) {
+                      Column(Modifier.weight(0.9f)) { muscleCard() }
+                      Column(Modifier.weight(1.1f)) { workoutList() }
+                  }
+              } else {
+                  muscleCard(); Spacer(Modifier.height(14.dp)); workoutList()
+              }
+          }
+          EOF
+
+                    cat << 'EOF' >> app/src/main/java/de/fold8/healthcoach/FoldHealthScreen.kt
+
+          @Composable
+          fun BodyAndSettingsPage(
+              rep: HealthReport,
+              isInner: Boolean,
+              savedAge: Int,
+              savedIcuKey: String,
+              onRequestPermissions: () -> Unit,
+              onSyncWithSettings: (Int, String) -> Unit
+          ) {
+              var ageText by remember { mutableStateOf(savedAge.toString()) }
+              var icuKeyText by remember { mutableStateOf(savedIcuKey) }
+
+              val bodyCard: @Composable () -> Unit = {
+                  val bc = rep.bodyComp
+                  BentoCard(borderColor = WithingsTeal.copy(alpha = 0.45f)) {
+                      Text("WITHINGS KÖRPERANALYSE ${bc.dateLabel?.let { "($it)" } ?: ""}", color = WithingsTeal, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                      Spacer(Modifier.height(8.dp))
+                      Text(
+                          "• Gewicht: ${bc.weightKg?.let { "$it kg" } ?: "-"}\n" +
+                          "• Körperfett: ${bc.bodyFatPercent?.let { "$it %" } ?: "-"}\n" +
+                          "• Muskelmasse (Fettfrei): ${bc.muscleMassKg?.let { "$it kg" } ?: "-"}\n" +
+                          "• Knochenmasse: ${bc.boneMassKg?.let { "$it kg" } ?: "-"}   |   Wasser: ${bc.waterMassKg?.let { "$it kg" } ?: "-"}",
+                          color = Color.White, fontSize = 13.5.sp, lineHeight = 22.sp
+                      )
+                      if (bc.weightTrend.size >= 2) {
+                          Spacer(Modifier.height(8.dp))
+                          SmoothAreaChart(bc.weightTrend.map { it.second }, WithingsTeal)
+                      }
+                  }
+              }
+
+              val setupCard: @Composable () -> Unit = {
+                  BentoCard {
+                      Text("DATENQUELLEN & VERBINDUNGEN", color = NeonCyan, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                      Spacer(Modifier.height(10.dp))
+                      OutlinedTextField(
+                          value = ageText,
+                          onValueChange = { ageText = it },
+                          label = { Text("Dein Alter (für Fitnessalter)") },
+                          singleLine = true,
+                          modifier = Modifier.fillMaxWidth()
+                      )
+                      Spacer(Modifier.height(10.dp))
+                      OutlinedTextField(
+                          value = icuKeyText,
+                          onValueChange = { icuKeyText = it },
+                          label = { Text("Intervals.icu API-Key (Garmin & Zwift)") },
+                          visualTransformation = PasswordVisualTransformation(),
+                          singleLine = true,
+                          modifier = Modifier.fillMaxWidth()
+                      )
+                      Spacer(Modifier.height(12.dp))
+                      Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                          Button(
+                              onClick = { onSyncWithSettings(ageText.toIntOrNull()?.coerceIn(16, 99) ?: 39, icuKeyText) },
+                              colors = ButtonDefaults.buttonColors(containerColor = NeonEmerald),
+                              modifier = Modifier.weight(1f)
+                          ) {
+                              Text("Speichern & Sync", color = Color.Black, fontWeight = FontWeight.Bold)
+                          }
+                          OutlinedButton(onClick = onRequestPermissions, modifier = Modifier.weight(1f)) {
+                              Text("Health Connect", color = Color.White)
+                          }
+                      }
+                      Spacer(Modifier.height(12.dp))
+                      Text(rep.auditLogs.joinToString("\n• ", prefix = "• "), color = MutedGray, fontSize = 11.5.sp)
+                  }
+              }
+
+              if (isInner) {
+                  Row(horizontalArrangement = Arrangement.spacedBy(22.dp)) {
+                      Column(Modifier.weight(1f)) { bodyCard() }
+                      Column(Modifier.weight(1f)) { setupCard() }
+                  }
+              } else {
+                  bodyCard(); Spacer(Modifier.height(14.dp)); setupCard()
+              }
+          }
+
+          @Composable
+          fun WorkoutDetailSheet(workout: UnifiedWorkout, onDismiss: () -> Unit, onSaveMuscles: (Set<MuscleGroup>) -> Unit) {
+              var selected by remember { mutableStateOf(workout.muscleGroups) }
+              AlertDialog(
+                  onDismissRequest = onDismiss,
+                  containerColor = CardGlass,
+                  title = { Text("${workout.title} (${workout.dateLabel})", color = Color.White, fontWeight = FontWeight.Bold) },
+                  text = {
+                      Column {
+                          Text("♥ Ø ${workout.avgHeartRate ?: "-"} / Max ${workout.maxHeartRate ?: "-"} bpm • ${workout.activeKcal} kcal", color = Color(0xFFC9D1D9), fontSize = 13.sp)
+                          if (workout.hrCurve.size >= 2) {
+                              Spacer(Modifier.height(10.dp))
+                              SmoothAreaChart(workout.hrCurve.map { it.toFloat() }, HealthCoral, Modifier.fillMaxWidth().height(110.dp))
+                          }
+                          if (workout.zoneMinutes.size == 5) {
+                              Spacer(Modifier.height(8.dp))
+                              Text("Pulszonen: Z1 ${workout.zoneMinutes[0]}m • Z2 ${workout.zoneMinutes[1]}m • Z3 ${workout.zoneMinutes[2]}m • Z4 ${workout.zoneMinutes[3]}m • Z5 ${workout.zoneMinutes[4]}m", color = MutedGray, fontSize = 11.5.sp)
+                          }
+                          Spacer(Modifier.height(12.dp))
+                          Text("Speediance Muskelgruppen zuweisen:", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                          Spacer(Modifier.height(6.dp))
+                          MuscleGroup.values().toList().chunked(3).forEach { rowGroups ->
+                              Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(vertical = 3.dp)) {
+                                  rowGroups.forEach { mg ->
+                                      val active = selected.contains(mg)
+                                      FilterChip(
+                                          selected = active,
+                                          onClick = { selected = if (active) selected - mg else selected + mg },
+                                          label = { Text(mg.label, fontSize = 11.sp) }
+                                      )
+                                  }
+                              }
+                          }
+                      }
+                  },
+                  confirmButton = {
+                      TextButton(onClick = { onSaveMuscles(selected) }) { Text("Speichern", color = NeonEmerald, fontWeight = FontWeight.Bold) }
+                  },
+                  dismissButton = {
+                      TextButton(onClick = onDismiss) { Text("Schließen", color = MutedGray) }
+                  }
+              )
+          }
+
+          @Composable
+          fun BentoCard(modifier: Modifier = Modifier, borderColor: Color = CardBorder, content: @Composable ColumnScope.() -> Unit) {
+              Surface(
+                  shape = RoundedCornerShape(22.dp),
+                  color = CardGlass,
+                  border = BorderStroke(1.dp, borderColor),
+                  modifier = modifier.fillMaxWidth()
+              ) {
+                  Column(modifier = Modifier.padding(18.dp), content = content)
+              }
+          }
+
+          @Composable
+          fun MiniVitalCard(title: String, value: String, subtitle: String, accent: Color, modifier: Modifier = Modifier) {
+              BentoCard(modifier = modifier) {
+                  Text(title, color = accent, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.6.sp)
+                  Spacer(Modifier.height(4.dp))
+                  Text(value, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
+                  Spacer(Modifier.height(2.dp))
+                  Text(subtitle, color = MutedGray, fontSize = 11.sp)
+              }
+          }
+          EOF
+
+                    cat << 'EOF' > app/src/main/java/de/fold8/healthcoach/MainActivity.kt
           package de.fold8.healthcoach
 
-          import android.app.AlertDialog
           import android.content.Context
-          import android.graphics.Color
-          import android.graphics.Typeface
-          import android.graphics.drawable.GradientDrawable
           import android.os.Bundle
-          import android.text.InputType
-          import android.view.Gravity
-          import android.view.View
-          import android.view.ViewGroup
-          import android.widget.*
-          import androidx.appcompat.app.AppCompatActivity
+          import androidx.activity.ComponentActivity
+          import androidx.activity.compose.setContent
+          import androidx.activity.enableEdgeToEdge
+          import androidx.compose.material3.MaterialTheme
+          import androidx.compose.material3.darkColorScheme
+          import androidx.compose.runtime.*
           import androidx.health.connect.client.HealthConnectClient
           import androidx.health.connect.client.PermissionController
           import androidx.lifecycle.lifecycleScope
           import kotlinx.coroutines.launch
 
-          class MainActivity : AppCompatActivity() {
+          class MainActivity : ComponentActivity() {
 
-              private lateinit var fusionEngine: HealthFusionEngine
-              private val coachClient = GeminiCoachClient()
-              private var selectedRange = TimeRangeOption.DAYS_7
-              private var activeTab = 0
-              private var currentReport: HealthReport? = null
-              private var currentAiText = "Synchronisiere Daten für dein KI-Briefing..."
+              private lateinit var engine: HealthFusionEngine
+              private var reportState by mutableStateOf<HealthReport?>(null)
+              private var statusState by mutableStateOf("Prüfe Datenquellen...")
+              private var rangeState by mutableStateOf(TimeRangeOption.DAYS_7)
+              private var ageState by mutableIntStateOf(39)
+              private var icuKeyState by mutableStateOf("")
 
-              private lateinit var contentHost: LinearLayout
-              private lateinit var headerSubtitle: TextView
-              private val tabButtons = mutableListOf<TextView>()
-
-              private val requestPermissionsLauncher = registerForActivityResult(
+              private val permLauncher = registerForActivityResult(
                   PermissionController.createRequestPermissionResultContract()
-              ) { refreshHealthData() }
+              ) { triggerSync() }
 
               override fun onCreate(savedInstanceState: Bundle?) {
                   super.onCreate(savedInstanceState)
-                  fusionEngine = HealthFusionEngine(this)
-                  val isInner = resources.configuration.screenWidthDp >= 600
-
-                  val root = LinearLayout(this).apply {
-                      orientation = if (isInner) LinearLayout.HORIZONTAL else LinearLayout.VERTICAL
-                      setBackgroundColor(Color.parseColor("#090C10"))
-                  }
-
-                  val navBar = buildNavigationBar(isInner)
-                  val mainArea = LinearLayout(this).apply {
-                      orientation = LinearLayout.VERTICAL
-                      layoutParams = if (isInner) LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
-                      else LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f)
-                  }
-
-                  val topBar = LinearLayout(this).apply {
-                      orientation = LinearLayout.HORIZONTAL
-                      gravity = Gravity.CENTER_VERTICAL
-                      setPadding(36, 44, 36, 20)
-                  }
-                  val titleCol = LinearLayout(this).apply {
-                      orientation = LinearLayout.VERTICAL
-                      layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-                  }
-                  titleCol.addView(TextView(this).apply {
-                      text = "Fold Health Coach"
-                      textSize = 22f
-                      setTypeface(null, Typeface.BOLD)
-                      setTextColor(Color.WHITE)
-                  })
-                  headerSubtitle = TextView(this).apply {
-                      text = "Garmin • Speediance • Zwift"
-                      textSize = 12.5f
-                      setTextColor(Color.parseColor("#8B949E"))
-                  }
-                  titleCol.addView(headerSubtitle)
-
-                  val syncPill = TextView(this).apply {
-                      text = "↻ Sync"
-                      textSize = 13f
-                      setTypeface(null, Typeface.BOLD)
-                      setTextColor(Color.parseColor("#2997FF"))
-                      setPadding(28, 14, 28, 14)
-                      background = pillBg("#13233A", "#2997FF")
-                      setOnClickListener { refreshHealthData() }
-                  }
-                  topBar.addView(titleCol)
-                  topBar.addView(syncPill)
-
-                  val scroll = ScrollView(this).apply {
-                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f)
-                  }
-                  contentHost = LinearLayout(this).apply {
-                      orientation = LinearLayout.VERTICAL
-                      setPadding(32, 8, 32, 48)
-                  }
-                  scroll.addView(contentHost)
-                  mainArea.addView(topBar)
-                  mainArea.addView(scroll)
-
-                  if (isInner) {
-                      root.addView(navBar)
-                      root.addView(mainArea)
-                  } else {
-                      root.addView(mainArea)
-                      root.addView(navBar)
-                  }
-
-                  setContentView(root)
-                  renderActiveTab()
-                  checkPermissionsAndLoad()
-              }
-
-              private fun buildNavigationBar(isInner: Boolean): LinearLayout {
-                  tabButtons.clear()
-                  val labels = listOf("◉ Übersicht", "☾ Schlaf", "⚡ Fitness", "♥ Gesundheit")
-                  return LinearLayout(this).apply {
-                      orientation = if (isInner) LinearLayout.VERTICAL else LinearLayout.HORIZONTAL
-                      setBackgroundColor(Color.parseColor("#0F141C"))
-                      setPadding(12, if (isInner) 64 else 14, 12, 18)
-                      layoutParams = if (isInner) LinearLayout.LayoutParams(230, ViewGroup.LayoutParams.MATCH_PARENT)
-                      else LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-
-                      labels.forEachIndexed { idx, lbl ->
-                          val tv = TextView(this@MainActivity).apply {
-                              text = lbl
-                              textSize = 13f
-                              gravity = if (isInner) Gravity.START else Gravity.CENTER
-                              setPadding(24, 22, 24, 22)
-                              layoutParams = if (isInner) LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { setMargins(0, 0, 0, 12) }
-                              else LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-                              setOnClickListener { activeTab = idx; updateTabHighlight(); renderActiveTab() }
-                          }
-                          tabButtons.add(tv)
-                          addView(tv)
-                      }
-                      updateTabHighlight()
-                  }
-              }
-
-              private fun updateTabHighlight() {
-                  tabButtons.forEachIndexed { idx, tv ->
-                      val sel = idx == activeTab
-                      tv.setTextColor(if (sel) Color.WHITE else Color.parseColor("#7D8590"))
-                      tv.setTypeface(null, if (sel) Typeface.BOLD else Typeface.NORMAL)
-                      tv.background = if (sel) pillBg("#1A2433", "#2997FF") else null
-                  }
-              }
-
-              private fun checkPermissionsAndLoad() {
-                  if (HealthConnectClient.getSdkStatus(this) != HealthConnectClient.SDK_AVAILABLE) {
-                      headerSubtitle.text = "Health Connect nicht installiert"
-                      return
-                  }
-                  lifecycleScope.launch {
-                      val granted = HealthConnectClient.getOrCreate(this@MainActivity).permissionController.getGrantedPermissions()
-                      if (granted.size >= 4) refreshHealthData()
-                      else headerSubtitle.text = "Bitte unter 'Gesundheit' Health Connect verbinden"
-                  }
-              }
-
-              private fun refreshHealthData() {
+                  enableEdgeToEdge()
+                  engine = HealthFusionEngine(this)
                   val prefs = getSharedPreferences("fold_health_prefs", Context.MODE_PRIVATE)
-                  val age = prefs.getInt("user_age", 39)
-                  headerSubtitle.text = "Synchronisiere Garmin, Speediance & Zwift..."
+                  ageState = prefs.getInt("user_age", 39)
+                  icuKeyState = prefs.getString("intervals_api_key", "") ?: ""
+
+                  setContent {
+                      MaterialTheme(colorScheme = darkColorScheme(background = BgObsidian, surface = CardGlass, primary = NeonCyan)) {
+                          FoldHealthApp(
+                              report = reportState,
+                              statusText = statusState,
+                              selectedRange = rangeState,
+                              savedAge = ageState,
+                              savedIcuKey = icuKeyState,
+                              onSelectRange = { rangeState = it; triggerSync() },
+                              onRequestPermissions = {
+                                  if (HealthConnectClient.getSdkStatus(this) == HealthConnectClient.SDK_AVAILABLE) {
+                                      permLauncher.launch(HealthFusionEngine.REQUIRED_PERMISSIONS)
+                                  }
+                              },
+                              onSyncWithSettings = { newAge, newIcuKey ->
+                                  ageState = newAge
+                                  icuKeyState = newIcuKey.trim()
+                                  prefs.edit().putInt("user_age", ageState).putString("intervals_api_key", icuKeyState).apply()
+                                  triggerSync()
+                              },
+                              onSaveMuscles = { workoutId, muscles ->
+                                  prefs.edit().putStringSet("muscles_$workoutId", muscles.map { it.name }.toSet()).apply()
+                                  triggerSync()
+                              }
+                          )
+                      }
+                  }
+                  triggerSync()
+              }
+
+              private fun triggerSync() {
+                  statusState = "Synchronisiere Garmin, Zwift, Fitbit, Withings & Speediance..."
                   lifecycleScope.launch {
                       try {
-                          val rep = fusionEngine.buildReport(age, selectedRange)
-                          currentReport = rep
-                          headerSubtitle.text = "Stand ${rep.generatedDateLabel} • Archiv: ${rep.allHistoricalWorkoutsCount} Trainings"
-                          renderActiveTab()
-                          currentAiText = coachClient.generateInsight(prefs.getString("gemini_api_key", "") ?: "", rep)
-                          if (activeTab == 0) renderActiveTab()
+                          val rep = engine.buildReport(ageState, rangeState, icuKeyState)
+                          reportState = rep
+                          statusState = "Stand ${rep.generatedDateLabel} • Archiv: ${rep.archiveCount} Trainings"
                       } catch (e: Exception) {
-                          headerSubtitle.text = "Hinweis: ${e.message}"
+                          statusState = "Hinweis: ${e.message}"
                       }
                   }
-              }
-          EOF
-
-                    cat << 'EOF' >> app/src/main/java/de/fold8/healthcoach/MainActivity.kt
-
-              private fun renderActiveTab() {
-                  contentHost.removeAllViews()
-                  val rep = currentReport
-                  if (rep == null) {
-                      val card = createCard().apply {
-                          addView(label("WILLKOMMEN BEIM FOLD HEALTH COACH", "#2997FF"))
-                          addView(bodyText("Verbinde einmalig Health Connect, damit deine Daten von Garmin, Speediance und Zwift geladen werden können."))
-                          addView(Button(this@MainActivity).apply {
-                              text = "Health Connect Rechte freigeben"
-                              setOnClickListener { requestPermissionsLauncher.launch(HealthFusionEngine.REQUIRED_PERMISSIONS) }
-                          })
-                      }
-                      contentHost.addView(card)
-                      return
-                  }
-
-                  when (activeTab) {
-                      0 -> renderOverviewTab(rep)
-                      1 -> renderSleepTab(rep)
-                      2 -> renderFitnessTab(rep)
-                      3 -> renderHealthTab(rep)
-                  }
-              }
-
-              private fun renderOverviewTab(rep: HealthReport) {
-                  // 1. Whoop-Style 3-Ringe Karte
-                  val ringsCard = createCard().apply {
-                      addView(label("TODAY'S PERFORMANCE • WHOOP INDEX", "#8B949E"))
-                      val row = LinearLayout(this@MainActivity).apply { orientation = LinearLayout.HORIZONTAL; setPadding(0, 12, 0, 4) }
-                      val recCol = when {
-                          rep.recoveryPercent >= 67 -> Color.parseColor("#16E06B")
-                          rep.recoveryPercent >= 34 -> Color.parseColor("#FFB020")
-                          else -> Color.parseColor("#FF453A")
-                      }
-                      val sleepPct = rep.sleepDetail?.sleepPerformancePercent ?: 0
-                      row.addView(WhoopRingView(this@MainActivity, "Erholung", "${rep.recoveryPercent}%", rep.recoveryPercent / 100f, recCol), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-                      row.addView(WhoopRingView(this@MainActivity, "Belastung", "${rep.dayStrain}", (rep.dayStrain / 21.0).toFloat(), Color.parseColor("#2997FF")), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-                      row.addView(WhoopRingView(this@MainActivity, "Schlaf", if (sleepPct > 0) "$sleepPct%" else "-", sleepPct / 100f, Color.parseColor("#5E5CE6")), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-                      addView(row)
-                  }
-                  contentHost.addView(ringsCard)
-
-                  // 2. Fitnessalter & Level Hero
-                  val fp = rep.fitnessProfile
-                  val ageColor = if (fp.ageDelta <= 0) "#16E06B" else "#FF9F0A"
-                  contentHost.addView(createCard("#111B29", "#253852").apply {
-                      addView(label("BIOLOGISCHES FITNESSALTER & LEVEL", ageColor))
-                      addView(bigMetric("${fp.fitnessAge} Jahre  (${if (fp.ageDelta > 0) "+${fp.ageDelta}" else "${fp.ageDelta}"} J. zu ${fp.chronologicalAge})"))
-                      addView(bodyText("Status: ${fp.fitnessLevelLabel} (${fp.fitnessScore}/100) • Details unter 'Gesundheit'"))
-                  })
-
-                  // 3. Apple Health 2x2 Vitals Grid
-                  val grid = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-                  val col1 = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply { setMargins(0, 0, 10, 0) } }
-                  val col2 = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply { setMargins(10, 0, 0, 0) } }
-
-                  col1.addView(metricTile("♥ RUHEPULS", rep.latestRestingHr?.let { "$it bpm" } ?: "-", "#FF453A"))
-                  col1.addView(metricTile("👣 SCHRITTE (${rep.selectedRange.label})", "${rep.periodSteps}", "#32D7FF"))
-                  col2.addView(metricTile("〰 HRV (RMSSD)", rep.latestHrvMs?.let { "${it.toInt()} ms" } ?: "-", "#16E06B"))
-                  col2.addView(metricTile("🔥 AKTIVKALORIEN", "${rep.periodActiveKcal} kcal", "#FF9F0A"))
-                  grid.addView(col1); grid.addView(col2)
-                  contentHost.addView(grid)
-
-                  // 4. KI-Coach Card
-                  contentHost.addView(createCard().apply {
-                      addView(label("✦ KI-COACH TAGESBRIEFING", "#BF5AF2"))
-                      addView(bodyText(currentAiText))
-                  })
-              }
-
-              private fun renderSleepTab(rep: HealthReport) {
-                  val s = rep.sleepDetail
-                  if (s == null) {
-                      contentHost.addView(createCard().apply {
-                          addView(label("SCHLAFANALYSE", "#5E5CE6"))
-                          addView(bodyText("Noch keine Schlafdaten in Health Connect gefunden. Stelle sicher, dass Garmin Connect Schlafdaten synchronisiert."))
-                      })
-                      return
-                  }
-                  contentHost.addView(createCard().apply {
-                      addView(label("LETZTE NACHT • QUELLE: ${s.sourceLabel.uppercase()}", "#5E5CE6"))
-                      addView(bigMetric("${s.totalMinutes / 60} Std. ${s.totalMinutes % 60} Min."))
-                      addView(bodyText("Schlafeffizienz: ${s.efficiencyPercent}%  •  Schlaf-Performance: ${s.sleepPerformancePercent}%"))
-                      addView(SleepStagesBarView(this@MainActivity, s))
-                      addView(bodyText(
-                          "\n🟣 Tiefschlaf: ${s.deepMinutes} Min.   |   🩷 REM: ${s.remMinutes} Min.\n" +
-                          "🔵 Leichtschlaf: ${s.lightMinutes} Min.   |   🟠 Wach: ${s.awakeMinutes} Min."
-                      ))
-                  })
-                  contentHost.addView(createCard().apply {
-                      addView(label("7-TAGE SCHLAFDAUER (STUNDEN)", "#32D7FF"))
-                      addView(MiniBarChartView(this@MainActivity, s.dailyHours7d, Color.parseColor("#5E5CE6")))
-                  })
-              }
-
-              private fun renderFitnessTab(rep: HealthReport) {
-                  // Zeitraum-Filter
-                  val bar = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(0, 0, 0, 16) }
-                  for (opt in TimeRangeOption.values()) {
-                      val sel = opt == selectedRange
-                      bar.addView(TextView(this).apply {
-                          text = opt.label; gravity = Gravity.CENTER; textSize = 12.5f
-                          setTypeface(null, if (sel) Typeface.BOLD else Typeface.NORMAL)
-                          setTextColor(if (sel) Color.WHITE else Color.parseColor("#8B949E"))
-                          setPadding(12, 16, 12, 16)
-                          background = pillBg(if (sel) "#1A2433" else "#12171F", if (sel) "#2997FF" else "#1F2733")
-                          layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply { setMargins(6, 0, 6, 0) }
-                          setOnClickListener { selectedRange = opt; refreshHealthData() }
-                      })
-                  }
-                  contentHost.addView(bar)
-
-                  // Muskelgruppen
-                  contentHost.addView(createCard().apply {
-                      addView(label("SPEEDIANCE MUSKELGRUPPEN (${rep.selectedRange.label})", "#FF9F0A"))
-                      for (mg in MuscleGroup.values()) {
-                          val c = rep.periodMuscleSets[mg] ?: 0
-                          val bars = "█".repeat(c.coerceAtMost(8)) + "░".repeat((4 - c).coerceAtLeast(0))
-                          addView(TextView(this@MainActivity).apply {
-                              text = "${mg.label.padEnd(11)} $bars  (${c}×)"
-                              textSize = 13f; typeface = Typeface.MONOSPACE
-                              setTextColor(if (c > 0) Color.parseColor("#16E06B") else Color.parseColor("#7D8590"))
-                              setPadding(0, 4, 0, 4)
-                          })
-                      }
-                  })
-
-                  // Aktivitäten mit Ø Puls, Max Puls & Mini-Pulskurve
-                  if (rep.filteredWorkouts.isEmpty()) {
-                      contentHost.addView(createCard().apply { addView(bodyText("Keine Trainings im Zeitraum (${rep.selectedRange.label}).")) })
-                      return
-                  }
-                  for (w in rep.filteredWorkouts.reversed()) {
-                      val mgText = if (w.muscleGroups.isNotEmpty()) "Muskeln: ${w.muscleGroups.joinToString { it.label }}" else if (w.isStrength) "Antippen für Muskelgruppen & Pulsverlauf" else "Antippen für Pulsverlauf & Zonen"
-                      contentHost.addView(createCard().apply {
-                          addView(label("${w.dateLabel} • ${w.sourceSummary.uppercase()} • STRAIN ${w.strainScore}", "#2997FF"))
-                          addView(bigMetric("${w.title} (${w.durationMinutes} Min.)"))
-                          addView(bodyText("♥ Ø ${w.avgHeartRate ?: "-"} bpm   |   Max ${w.maxHeartRate ?: "-"} bpm   |   🔥 ${w.activeKcal} kcal"))
-                          if (w.hrCurve.size >= 2) addView(HeartRateChartView(this@MainActivity, w.hrCurve, compact = true))
-                          addView(TextView(this@MainActivity).apply {
-                              text = mgText; textSize = 12f; setTextColor(Color.parseColor("#8B949E")); setPadding(0, 8, 0, 0)
-                          })
-                          setOnClickListener { openWorkoutDetailDialog(w) }
-                      })
-                  }
-              }
-
-              private fun openWorkoutDetailDialog(w: UnifiedWorkout) {
-                  val box = LinearLayout(this).apply {
-                      orientation = LinearLayout.VERTICAL; setPadding(40, 32, 40, 24); setBackgroundColor(Color.parseColor("#12171F"))
-                  }
-                  box.addView(TextView(this).apply {
-                      text = "♥ Ø ${w.avgHeartRate ?: "-"} bpm  •  Max ${w.maxHeartRate ?: "-"} bpm  •  ${w.activeKcal} kcal"
-                      textSize = 14f; setTextColor(Color.WHITE); setPadding(0, 0, 0, 16)
-                  })
-                  box.addView(HeartRateChartView(this, w.hrCurve, compact = false))
-                  if (w.zoneMinutes.size == 5) {
-                      box.addView(TextView(this).apply {
-                          text = "\nPulszonen (Minuten):\nZ1 Leicht: ${w.zoneMinutes[0]}m  |  Z2 Fettverbrennung: ${w.zoneMinutes[1]}m\nZ3 Aerob: ${w.zoneMinutes[2]}m  |  Z4 Schwelle: ${w.zoneMinutes[3]}m  |  Z5 Max: ${w.zoneMinutes[4]}m"
-                          textSize = 12.5f; setTextColor(Color.parseColor("#C9D1D9"))
-                      })
-                  }
-
-                  val prefs = getSharedPreferences("fold_health_prefs", Context.MODE_PRIVATE)
-                  val allGroups = MuscleGroup.values()
-                  val checked = BooleanArray(allGroups.size) { w.muscleGroups.contains(allGroups[it]) }
-
-                  AlertDialog.Builder(this)
-                      .setTitle("${w.title} (${w.dateLabel})")
-                      .setView(box)
-                      .setMultiChoiceItems(allGroups.map { "Muskel: ${it.label}" }.toTypedArray(), checked) { _, which, isChecked -> checked[which] = isChecked }
-                      .setPositiveButton("Muskel-Tags speichern") { _, _ ->
-                          prefs.edit().putStringSet("muscles_${w.id}", allGroups.indices.filter { checked[it] }.map { allGroups[it].name }.toSet()).apply()
-                          refreshHealthData()
-                      }
-                      .setNegativeButton("Schließen", null)
-                      .show()
-              }
-
-              private fun renderHealthTab(rep: HealthReport) {
-                  val fp = rep.fitnessProfile
-                  contentHost.addView(createCard().apply {
-                      addView(label("FITNESSALTER-BERECHNUNG (FAKTOREN)", "#16E06B"))
-                      addView(bigMetric("Fitnessalter: ${fp.fitnessAge} J. (${fp.fitnessLevelLabel})"))
-                      addView(bodyText(fp.factorBreakdown.joinToString("\n• ", prefix = "• ")))
-                  })
-
-                  contentHost.addView(createCard().apply {
-                      addView(label("RUHEPULS-VERLAUF (7 TAGE IN BPM)", "#FF453A"))
-                      addView(MiniBarChartView(this@MainActivity, rep.rhrTrend7d, Color.parseColor("#FF453A")))
-                  })
-
-                  contentHost.addView(createCard().apply {
-                      addView(label("HRV-VERLAUF (7 TAGE IN MS)", "#16E06B"))
-                      addView(MiniBarChartView(this@MainActivity, rep.hrvTrend7d, Color.parseColor("#16E06B")))
-                  })
-
-                  contentHost.addView(createCard().apply {
-                      addView(label("DATEN-BEREINIGUNG & QUELLEN-CHECK", "#32D7FF"))
-                      addView(bodyText(rep.auditLogs.joinToString("\n• ", prefix = "• ")))
-                  })
-
-                  val prefs = getSharedPreferences("fold_health_prefs", Context.MODE_PRIVATE)
-                  val ageEdit = EditText(this).apply { hint = "Dein Alter (z. B. 39)"; setText(prefs.getInt("user_age", 39).toString()); inputType = InputType.TYPE_CLASS_NUMBER; setTextColor(Color.WHITE); setHintTextColor(Color.GRAY) }
-                  val keyEdit = EditText(this).apply { hint = "Optional: Google Gemini API-Key"; setText(prefs.getString("gemini_api_key", "")); inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD; setTextColor(Color.WHITE); setHintTextColor(Color.GRAY) }
-
-                  contentHost.addView(createCard().apply {
-                      addView(label("EINSTELLUNGEN & BERECHTIGUNGEN", "#8B949E"))
-                      addView(ageEdit); addView(keyEdit)
-                      addView(Button(this@MainActivity).apply {
-                          text = "Speichern & Neu berechnen"
-                          setOnClickListener {
-                              val a = ageEdit.text.toString().toIntOrNull()?.coerceIn(16, 99) ?: 39
-                              prefs.edit().putInt("user_age", a).putString("gemini_api_key", keyEdit.text.toString()).apply()
-                              refreshHealthData()
-                          }
-                      })
-                      addView(Button(this@MainActivity).apply {
-                          text = "Health Connect Rechte prüfen"
-                          setOnClickListener { requestPermissionsLauncher.launch(HealthFusionEngine.REQUIRED_PERMISSIONS) }
-                      })
-                  })
-              }
-
-              private fun createCard(bg: String = "#12171F", stroke: String = "#1F2733") = LinearLayout(this).apply {
-                  orientation = LinearLayout.VERTICAL
-                  setPadding(30, 26, 30, 26)
-                  background = pillBg(bg, stroke)
-                  layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { setMargins(0, 0, 0, 20) }
-              }
-
-              private fun metricTile(title: String, value: String, accentHex: String) = createCard().apply {
-                  addView(label(title, accentHex))
-                  addView(bigMetric(value))
-              }
-
-              private fun label(txt: String, hex: String) = TextView(this).apply {
-                  text = txt; textSize = 11f; setTypeface(null, Typeface.BOLD); setTextColor(Color.parseColor(hex)); setPadding(0, 0, 0, 6)
-              }
-
-              private fun bigMetric(txt: String) = TextView(this).apply {
-                  text = txt; textSize = 19f; setTypeface(null, Typeface.BOLD); setTextColor(Color.WHITE); setPadding(0, 2, 0, 6)
-              }
-
-              private fun bodyText(txt: String) = TextView(this).apply {
-                  text = txt; textSize = 13.5f; setTextColor(Color.parseColor("#C9D1D9")); setLineSpacing(6f, 1f)
-              }
-
-              private fun pillBg(bgHex: String, strokeHex: String) = GradientDrawable().apply {
-                  setColor(Color.parseColor(bgHex)); cornerRadius = 26f; setStroke(2, Color.parseColor(strokeHex))
               }
           }
           EOF
@@ -1594,4 +1939,7 @@ jobs:
         with:
           name: FoldHealthCoach-APK
           path: app/build/outputs/apk/debug/app-debug.apk
+          
+          
+
           
