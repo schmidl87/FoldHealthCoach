@@ -1,0 +1,462 @@
+name: Build Fold Health Coach APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: Java 17 einrichten
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Gradle einrichten
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+
+      - name: Komplettes Android-Projekt automatisch erzeugen
+        run: |
+          mkdir -p app/src/main/java/de/fold8/healthcoach
+
+          cat << 'EOF' > settings.gradle.kts
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          rootProject.name = "FoldHealthCoach"
+          include(":app")
+          EOF
+
+          cat << 'EOF' > build.gradle.kts
+          plugins {
+              id("com.android.application") version "8.7.2" apply false
+              id("org.jetbrains.kotlin.android") version "2.0.21" apply false
+          }
+          EOF
+
+          cat << 'EOF' > gradle.properties
+          android.useAndroidX=true
+          kotlin.code.style=official
+          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+          EOF
+
+          cat << 'EOF' > app/build.gradle.kts
+          plugins {
+              id("com.android.application")
+              id("org.jetbrains.kotlin.android")
+          }
+
+          android {
+              namespace = "de.fold8.healthcoach"
+              compileSdk = 35
+
+              defaultConfig {
+                  applicationId = "de.fold8.healthcoach"
+                  minSdk = 28
+                  targetSdk = 35
+                  versionCode = 1
+                  versionName = "1.0"
+              }
+
+              buildTypes {
+                  release {
+                      isMinifyEnabled = false
+                  }
+              }
+
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+
+              kotlinOptions {
+                  jvmTarget = "17"
+              }
+          }
+
+          dependencies {
+              implementation("androidx.core:core-ktx:1.15.0")
+              implementation("androidx.appcompat:appcompat:1.7.0")
+              implementation("com.google.android.material:material:1.12.0")
+              implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+              implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+              implementation("androidx.health.connect:connect-client:1.1.0")
+          }
+          EOF
+
+          cat << 'EOF' > app/src/main/AndroidManifest.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+              <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.health.READ_STEPS" />
+              <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
+              <uses-permission android:name="android.permission.health.READ_RESTING_HEART_RATE" />
+              <uses-permission android:name="android.permission.health.READ_SLEEP" />
+              <uses-permission android:name="android.permission.health.READ_EXERCISE" />
+              <uses-permission android:name="android.permission.health.READ_ACTIVE_CALORIES_BURNED" />
+
+              <queries>
+                  <package android:name="com.google.android.apps.healthdata" />
+              </queries>
+
+              <application
+                  android:allowBackup="true"
+                  android:icon="@android:drawable/ic_menu_myplaces"
+                  android:label="Fold Health Coach"
+                  android:supportsRtl="true"
+                  android:theme="@style/Theme.Material3.DayNight.NoActionBar">
+
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                      <intent-filter>
+                          <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+                      </intent-filter>
+                  </activity>
+
+                  <activity-alias
+                      android:name="ViewPermissionUsageActivity"
+                      android:exported="true"
+                      android:targetActivity=".MainActivity"
+                      android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
+                      <intent-filter>
+                          <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+                          <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
+                      </intent-filter>
+                  </activity-alias>
+
+              </application>
+          </manifest>
+          EOF
+
+          cat << 'EOF' > app/src/main/java/de/fold8/healthcoach/HealthFusionEngine.kt
+          package de.fold8.healthcoach
+
+          import android.content.Context
+          import androidx.health.connect.client.HealthConnectClient
+          import androidx.health.connect.client.permission.HealthPermission
+          import androidx.health.connect.client.records.*
+          import androidx.health.connect.client.request.ReadRecordsRequest
+          import androidx.health.connect.client.time.TimeRangeFilter
+          import java.time.Duration
+          import java.time.Instant
+          import java.time.LocalDate
+          import java.time.ZoneId
+          import java.time.format.DateTimeFormatter
+          import kotlin.math.min
+          import kotlin.math.roundToInt
+
+          enum class DataSource(val label: String, val priority: Int) {
+              GARMIN("Garmin", 3),
+              SPEEDIANCE("Speediance", 2),
+              SAMSUNG("Samsung Health", 1),
+              OTHER("Andere App", 0)
+          }
+
+          data class UnifiedWorkout(
+              val title: String,
+              val startTime: Instant,
+              val endTime: Instant,
+              val durationMinutes: Long,
+              val avgHeartRate: Int?,
+              val maxHeartRate: Int?,
+              val activeKcal: Int,
+              val sourceSummary: String,
+              val wasMerged: Boolean,
+              val isNonStepActivity: Boolean
+          )
+
+          data class DailyHealthReport(
+              val dateLabel: String,
+              val cleanSteps: Long,
+              val rawSteps: Long,
+              val cleanActiveKcal: Int,
+              val restingHr: Int?,
+              val sleepHours: Double?,
+              val workouts: List<UnifiedWorkout>,
+              val auditLogs: List<String>,
+              val recoveryScore: Int
+          )
+
+          class HealthFusionEngine(private val context: Context) {
+
+              companion object {
+                  val REQUIRED_PERMISSIONS = setOf(
+                      HealthPermission.getReadPermission(StepsRecord::class),
+                      HealthPermission.getReadPermission(ExerciseSessionRecord::class),
+                      HealthPermission.getReadPermission(HeartRateRecord::class),
+                      HealthPermission.getReadPermission(RestingHeartRateRecord::class),
+                      HealthPermission.getReadPermission(SleepSessionRecord::class),
+                      HealthPermission.getReadPermission(ActiveCaloriesBurnedRecord::class)
+                  )
+              }
+
+              private fun classifySource(packageName: String): DataSource {
+                  val pkg = packageName.lowercase()
+                  return when {
+                      pkg.contains("garmin") -> DataSource.GARMIN
+                      pkg.contains("speediance") -> DataSource.SPEEDIANCE
+                      pkg.contains("shealth") || pkg.contains("samsung") -> DataSource.SAMSUNG
+                      else -> DataSource.OTHER
+                  }
+              }
+
+              suspend fun buildReportForLast24Hours(): DailyHealthReport {
+                  val client = HealthConnectClient.getOrCreate(context)
+                  val now = Instant.now()
+                  val startOfWindow = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant()
+                  val sleepLookback = startOfWindow.minus(Duration.ofHours(14))
+
+                  val logs = mutableListOf<String>()
+
+                  val rawWorkouts = client.readRecords(
+                      ReadRecordsRequest(
+                          ExerciseSessionRecord::class,
+                          timeRangeFilter = TimeRangeFilter.between(startOfWindow, now)
+                      )
+                  ).records
+
+                  val rawHr = client.readRecords(
+                      ReadRecordsRequest(
+                          HeartRateRecord::class,
+                          timeRangeFilter = TimeRangeFilter.between(startOfWindow, now)
+                      )
+                  ).records
+
+                  val rawCalories = client.readRecords(
+                      ReadRecordsRequest(
+                          ActiveCaloriesBurnedRecord::class,
+                          timeRangeFilter = TimeRangeFilter.between(startOfWindow, now)
+                      )
+                  ).records
+
+                  val rawSteps = client.readRecords(
+                      ReadRecordsRequest(
+                          StepsRecord::class,
+                          timeRangeFilter = TimeRangeFilter.between(startOfWindow, now)
+                      )
+                  ).records
+
+                  val rawRestingHr = client.readRecords(
+                      ReadRecordsRequest(
+                          RestingHeartRateRecord::class,
+                          timeRangeFilter = TimeRangeFilter.between(sleepLookback, now)
+                      )
+                  ).records
+
+                  val rawSleep = client.readRecords(
+                      ReadRecordsRequest(
+                          SleepSessionRecord::class,
+                          timeRangeFilter = TimeRangeFilter.between(sleepLookback, now)
+                      )
+                  ).records
+
+                  // 1. Trainings deduplizieren & verschmelzen
+                  val unifiedWorkouts = mergeWorkouts(rawWorkouts, rawHr, rawCalories, logs)
+
+                  // 2. Schritte deduplizieren & Geister-Schritte während Kraft/Rad herausrechnen
+                  val totalRawSteps = rawSteps.sumOf { it.count }
+                  val cleanSteps = filterAndDeduplicateSteps(rawSteps, unifiedWorkouts, logs)
+
+                  // 3. Aktive Kalorien deduplizieren
+                  val cleanActiveKcal = deduplicateCalories(rawCalories, unifiedWorkouts, logs)
+
+                  // 4. Ruhepuls & Schlaf (Garmin bevorzugt)
+                  val restingHr = rawRestingHr
+                      .sortedByDescending { classifySource(it.metadata.dataOrigin.packageName).priority }
+                      .firstOrNull()?.beatsPerMinute?.toInt()
+
+                  val sleepHours = deduplicateSleepHours(rawSleep, logs)
+
+                  // 5. Lokaler Plausibilitäts- & Erholungs-Score (0-100)
+                  val recoveryScore = calculateRecoveryScore(restingHr, sleepHours, unifiedWorkouts)
+
+                  if (logs.isEmpty()) {
+                      logs.add("Keine Duplikate oder Ausreißer im aktuellen Zeitraum gefunden.")
+                  }
+
+                  val dateLabel = LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+                  return DailyHealthReport(
+                      dateLabel = dateLabel,
+                      cleanSteps = cleanSteps,
+                      rawSteps = totalRawSteps,
+                      cleanActiveKcal = cleanActiveKcal,
+                      restingHr = restingHr,
+                      sleepHours = sleepHours,
+                      workouts = unifiedWorkouts,
+                      auditLogs = logs,
+                      recoveryScore = recoveryScore
+                  )
+              }
+
+              private fun mergeWorkouts(
+                  sessions: List<ExerciseSessionRecord>,
+                  hrRecords: List<HeartRateRecord>,
+                  calRecords: List<ActiveCaloriesBurnedRecord>,
+                  logs: MutableList<String>
+              ): List<UnifiedWorkout> {
+                  val sorted = sessions.sortedBy { it.startTime }
+                  val used = BooleanArray(sorted.size)
+                  val result = mutableListOf<UnifiedWorkout>()
+
+                  for (i in sorted.indices) {
+                      if (used[i]) continue
+                      val base = sorted[i]
+                      val baseSrc = classifySource(base.metadata.dataOrigin.packageName)
+                      var partner: ExerciseSessionRecord? = null
+                      var partnerSrc: DataSource? = null
+
+                      for (j in i + 1 until sorted.size) {
+                          if (used[j]) continue
+                          val candidate = sorted[j]
+                          val overlap = overlapRatio(base.startTime, base.endTime, candidate.startTime, candidate.endTime)
+                          if (overlap >= 0.50) {
+                              used[j] = true
+                              partner = candidate
+                              partnerSrc = classifySource(candidate.metadata.dataOrigin.packageName)
+                              break
+                          }
+                      }
+
+                      val start = if (partner != null) minOf(base.startTime, partner.startTime) else base.startTime
+                      val end = if (partner != null) maxOf(base.endTime, partner.endTime) else base.endTime
+                      val durationMin = Duration.between(start, end).toMinutes().coerceAtLeast(1L)
+
+                      val chosenType = when {
+                          baseSrc == DataSource.SPEEDIANCE -> base.exerciseType
+                          partnerSrc == DataSource.SPEEDIANCE && partner != null -> partner.exerciseType
+                          else -> base.exerciseType
+                      }
+
+                      val title = resolveWorkoutTitle(base, partner, chosenType)
+
+                      // Pulsdaten bevorzugt von Garmin im Zeitfenster sammeln
+                      val windowHrSamples = hrRecords
+                          .filter { it.endTime >= start && it.startTime <= end }
+                          .sortedByDescending { classifySource(it.metadata.dataOrigin.packageName).priority }
+                          .flatMap { it.samples }
+                          .filter { it.time in start..end }
+                          .map { it.beatsPerMinute.toInt() }
+
+                      val avgHr = if (windowHrSamples.isNotEmpty()) windowHrSamples.average().roundToInt() else null
+                      val maxHr = windowHrSamples.maxOrNull()
+
+                      // Plausible Kalorien für dieses Training (nicht summieren!)
+                      val workoutCalRecords = calRecords.filter {
+                          overlapRatio(start, end, it.startTime, it.endTime) >= 0.50
+                      }.sortedByDescending { classifySource(it.metadata.dataOrigin.packageName).priority }
+
+                      val kcal = workoutCalRecords
+                          .map { it.energy.inKilocalories.roundToInt() }
+                          .firstOrNull { it in 10..2500 }
+                          ?: (durationMin * 6).toInt()
+
+                      val sourceSummary = if (partner != null && partnerSrc != null) {
+                          logs.add("Training verschmolzen: '$title' (${baseSrc.label} + ${partnerSrc.label}) → nicht doppelt gezählt.")
+                          "${baseSrc.label} + ${partnerSrc.label} (verschmolzen)"
+                      } else {
+                          baseSrc.label
+                      }
+
+                      val isNonStep = chosenType in setOf(
+                          ExerciseSessionRecord.EXERCISE_TYPE_BIKING,
+                          ExerciseSessionRecord.EXERCISE_TYPE_BIKING_STATIONARY,
+                          ExerciseSessionRecord.EXERCISE_TYPE_STRENGTH_TRAINING,
+                          ExerciseSessionRecord.EXERCISE_TYPE_WEIGHTLIFTING,
+                          ExerciseSessionRecord.EXERCISE_TYPE_ROWING_MACHINE
+                      )
+
+                      result.add(
+                          UnifiedWorkout(
+                              title = title,
+                              startTime = start,
+                              endTime = end,
+                              durationMinutes = durationMin,
+                              avgHeartRate = avgHr,
+                              maxHeartRate = maxHr,
+                              activeKcal = kcal,
+                              sourceSummary = sourceSummary,
+                              wasMerged = partner != null,
+                              isNonStepActivity = isNonStep
+                          )
+                      )
+                  }
+                  return result
+              }
+
+              private fun filterAndDeduplicateSteps(
+                  steps: List<StepsRecord>,
+                  workouts: List<UnifiedWorkout>,
+                  logs: MutableList<String>
+              ): Long {
+                  val prioritized = steps.sortedWith(
+                      compareByDescending<StepsRecord> { classifySource(it.metadata.dataOrigin.packageName).priority }
+                          .thenBy { it.startTime }
+                  )
+                  val accepted = mutableListOf<StepsRecord>()
+                  var skippedDuplicateSteps = 0L
+                  var skippedGhostSteps = 0L
+
+                  for (rec in prioritized) {
+                      val durMin = Duration.between(rec.startTime, rec.endTime).toMinutes().coerceAtLeast(1L)
+                      if (rec.count / durMin > 260L) {
+                          skippedGhostSteps += rec.count
+                          continue
+                      }
+
+                      val duringNonStepWorkout = workouts.any { w ->
+                          w.isNonStepActivity && overlapRatio(w.startTime, w.endTime, rec.startTime, rec.endTime) >= 0.70
+                      }
+                      if (duringNonStepWorkout) {
+                          skippedGhostSteps += rec.count
+                          continue
+                      }
+
+                      val isDuplicate = accepted.any { existing ->
+                          overlapRatio(existing.startTime, existing.endTime, rec.startTime, rec.endTime) >= 0.50
+                      }
+                      if (isDuplicate) {
+                          skippedDuplicateSteps += rec.count
+                          continue
+                      }
+
+                      accepted.add(rec)
+                  }
+
+                  if (skippedDuplicateSteps > 0L) {
+                      logs.add("Doppelte Schritte entfernt: $skippedDuplicateSteps Schritte aus Zweit-App ignoriert.")
+                  }
+                  if (skippedGhostSteps > 0L) {
+                      logs.add("Geister-Schritte bereinigt: $skippedGhostSteps Schritte während Rad/Krafttraining abgezogen.")
+                  }
+                  return accepted.sumOf { it.count }
+              }
+
+              private fun deduplicateCalories(
+                  calRecords: List<ActiveCaloriesBurnedRecord>,
+                  workouts: L
